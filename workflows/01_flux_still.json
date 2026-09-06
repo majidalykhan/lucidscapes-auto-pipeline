@@ -1,0 +1,283 @@
+{
+  "119": {
+    "inputs": {},
+    "class_type": "PixaromaRunTimer",
+    "_meta": {
+      "title": "Run Timer Pixaroma"
+    }
+  },
+  "120": {
+    "inputs": {
+      "ResolutionState": "{\"mode\":\"preset\",\"ratio\":\"9:16\",\"w\":768,\"h\":1344,\"custom_w\":1024,\"custom_h\":1024,\"custom_ratio_w\":4,\"custom_ratio_h\":3,\"snap\":16}"
+    },
+    "class_type": "PixaromaResolution",
+    "_meta": {
+      "title": "Resolution Pixaroma"
+    }
+  },
+  "121": {
+    "inputs": {
+      "images": [
+        "98:8",
+        0
+      ],
+      "SaveImageState": "{\"version\":1,\"folder\":\"C:/ComfyUI/output/Images/Flux/text_to_image/Cozy cinematic\",\"pattern\":\"Flux.2 Dev_%date:yyyy-MM-dd%_%date:hh-mm-ss%_%width%x%height%_%counter%_0\",\"format\":\"png\",\"quality\":100,\"embedWorkflow\":true,\"civitaiMeta\":false,\"saveOnRun\":true,\"dateStyle\":\"yyyy-MM-dd\",\"counterDigits\":3,\"folded\":false,\"hideBarWhenFolded\":false,\"webpLossless\":false,\"inputSubfolders\":false,\"showOpen\":true,\"showCopy\":true,\"showFolder\":true,\"showPng\":true,\"showJpg\":true,\"showWebp\":true}"
+    },
+    "class_type": "PixaromaSaveImage",
+    "_meta": {
+      "title": "Save Image Pixaroma"
+    }
+  },
+  "98:22": {
+    "inputs": {
+      "model": [
+        "98:102",
+        0
+      ],
+      "conditioning": [
+        "98:26",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider"
+    }
+  },
+  "98:10": {
+    "inputs": {
+      "vae_name": "flux2\\flux2-vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "98:8": {
+    "inputs": {
+      "samples": [
+        "98:13",
+        0
+      ],
+      "vae": [
+        "98:10",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "98:38": {
+    "inputs": {
+      "clip_name": "flux2\\mistral_3_small_flux2_fp4_mixed.safetensors",
+      "type": "flux2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "98:48": {
+    "inputs": {
+      "steps": [
+        "98:103",
+        0
+      ],
+      "width": [
+        "120",
+        0
+      ],
+      "height": [
+        "120",
+        1
+      ]
+    },
+    "class_type": "Flux2Scheduler",
+    "_meta": {
+      "title": "Flux2Scheduler"
+    }
+  },
+  "98:47": {
+    "inputs": {
+      "width": [
+        "120",
+        0
+      ],
+      "height": [
+        "120",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyFlux2LatentImage",
+    "_meta": {
+      "title": "Empty Flux 2 Latent"
+    }
+  },
+  "98:102": {
+    "inputs": {
+      "switch": [
+        "98:104",
+        0
+      ],
+      "on_false": [
+        "98:12",
+        0
+      ],
+      "on_true": [
+        "98:101",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch(model)"
+    }
+  },
+  "98:99": {
+    "inputs": {
+      "value": 8
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Steps"
+    }
+  },
+  "98:103": {
+    "inputs": {
+      "switch": [
+        "98:104",
+        0
+      ],
+      "on_false": [
+        "98:100",
+        0
+      ],
+      "on_true": [
+        "98:99",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch(steps)"
+    }
+  },
+  "98:16": {
+    "inputs": {
+      "sampler_name": "dpmpp_2m"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "98:101": {
+    "inputs": {
+      "lora_name": "flux2\\Flux_2-Turbo-LoRA_comfyui.safetensors",
+      "strength_model": 1,
+      "model": [
+        "98:12",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "98:104": {
+    "inputs": {
+      "value": false
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Enable Turbo LoRA"
+    }
+  },
+  "98:12": {
+    "inputs": {
+      "unet_name": "flux2_dev\\flux2_dev_fp8mixed.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "98:26": {
+    "inputs": {
+      "guidance": 6,
+      "conditioning": [
+        "98:6",
+        0
+      ]
+    },
+    "class_type": "FluxGuidance",
+    "_meta": {
+      "title": "FluxGuidance"
+    }
+  },
+  "98:100": {
+    "inputs": {
+      "value": 20
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Steps"
+    }
+  },
+  "98:6": {
+    "inputs": {
+      "text": "photo of a small kitchen counter corner near a window, a folded hand towel\nresting on the counter, soft morning daylight coming through a nearby\nwindow, a hint of greenery from a small potted herb on the windowsill,\nlight-colored countertop, plain wall tile or painted wall in the\nbackground, amateur phone-photo quality, no people, no text, no logos,\nempty space on the counter for a product to be placed later",
+      "clip": [
+        "98:38",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "POSITIVE_PROMPT"
+    }
+  },
+  "98:13": {
+    "inputs": {
+      "noise": [
+        "98:125",
+        0
+      ],
+      "guider": [
+        "98:22",
+        0
+      ],
+      "sampler": [
+        "98:16",
+        0
+      ],
+      "sigmas": [
+        "98:48",
+        0
+      ],
+      "latent_image": [
+        "98:47",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SAMPLER"
+    }
+  },
+  "98:125": {
+    "inputs": {
+      "noise_seed": 0
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  }
+}

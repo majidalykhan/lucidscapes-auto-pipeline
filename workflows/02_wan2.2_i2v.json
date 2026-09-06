@@ -1,0 +1,537 @@
+{
+  "108": {
+    "inputs": {
+      "filename_prefix": "video/ComfyUI",
+      "format": "auto",
+      "format.codec": "auto",
+      "codec": "auto",
+      "video": [
+        "129:94",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "Save Video"
+    }
+  },
+  "221": {
+    "inputs": {
+      "image": "25-06-2026_13-05-13_00001_.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LOAD_IMAGE"
+    }
+  },
+  "224": {
+    "inputs": {
+      "ResolutionState": "{\"mode\":\"preset\",\"ratio\":\"9:16\",\"w\":1088,\"h\":1920,\"custom_w\":1024,\"custom_h\":1024,\"custom_ratio_w\":4,\"custom_ratio_h\":3,\"snap\":16}"
+    },
+    "class_type": "PixaromaResolution",
+    "_meta": {
+      "title": "Resolution Pixaroma"
+    }
+  },
+  "129:104": {
+    "inputs": {
+      "shift": 5.000000000000001,
+      "model": [
+        "129:116",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "ModelSamplingSD3"
+    }
+  },
+  "129:116": {
+    "inputs": {
+      "switch": [
+        "129:131",
+        0
+      ],
+      "on_false": [
+        "129:95",
+        0
+      ],
+      "on_true": [
+        "129:101",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (Model)"
+    }
+  },
+  "129:103": {
+    "inputs": {
+      "shift": 5.000000000000001,
+      "model": [
+        "129:117",
+        0
+      ]
+    },
+    "class_type": "ModelSamplingSD3",
+    "_meta": {
+      "title": "ModelSamplingSD3"
+    }
+  },
+  "129:93": {
+    "inputs": {
+      "text": "Camera pan down, fire glowing, only camera movement, cinematic shot",
+      "clip": [
+        "129:84",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "VIDEO_PROMPT"
+    }
+  },
+  "129:87": {
+    "inputs": {
+      "samples": [
+        "129:85",
+        0
+      ],
+      "vae": [
+        "129:90",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "129:94": {
+    "inputs": {
+      "fps": [
+        "129:162",
+        0
+      ],
+      "bit_depth": 8,
+      "color_space": "sRGB",
+      "images": [
+        "129:87",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "Create Video"
+    }
+  },
+  "129:161": {
+    "inputs": {
+      "value": 5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (Duration)"
+    }
+  },
+  "129:162": {
+    "inputs": {
+      "value": 16
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (FPS)"
+    }
+  },
+  "129:163": {
+    "inputs": {
+      "expression": "floor (a * b + 1)",
+      "values.a": [
+        "129:161",
+        0
+      ],
+      "values.b": [
+        "129:162",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "Math Expression"
+    }
+  },
+  "129:96": {
+    "inputs": {
+      "unet_name": "wan2.2\\wan2.2_fun_camera_low_noise_14B_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "129:95": {
+    "inputs": {
+      "unet_name": "wan2.2\\wan2.2_fun_camera_high_noise_14B_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "129:84": {
+    "inputs": {
+      "clip_name": "wan2.2\\umt5_xxl_fp8_e4m3fn_scaled.safetensors",
+      "type": "wan",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "129:126": {
+    "inputs": {
+      "value": 3.5
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (CFG)"
+    }
+  },
+  "129:127": {
+    "inputs": {
+      "value": 10
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (split_step)"
+    }
+  },
+  "129:101": {
+    "inputs": {
+      "lora_name": "wan2.2\\wan2.2_i2v_lightx2v_4steps_lora_v1_high_noise.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "129:95",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "129:90": {
+    "inputs": {
+      "vae_name": "wan2.1\\wan_2.1_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "129:125": {
+    "inputs": {
+      "switch": [
+        "129:131",
+        0
+      ],
+      "on_false": [
+        "129:127",
+        0
+      ],
+      "on_true": [
+        "129:124",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (Split Step)"
+    }
+  },
+  "129:120": {
+    "inputs": {
+      "switch": [
+        "129:131",
+        0
+      ],
+      "on_false": [
+        "129:126",
+        0
+      ],
+      "on_true": [
+        "129:122",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (CFG)"
+    }
+  },
+  "129:117": {
+    "inputs": {
+      "switch": [
+        "129:131",
+        0
+      ],
+      "on_false": [
+        "129:96",
+        0
+      ],
+      "on_true": [
+        "129:102",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (Model)"
+    }
+  },
+  "129:119": {
+    "inputs": {
+      "switch": [
+        "129:131",
+        0
+      ],
+      "on_false": [
+        "129:128",
+        0
+      ],
+      "on_true": [
+        "129:118",
+        0
+      ]
+    },
+    "class_type": "ComfySwitchNode",
+    "_meta": {
+      "title": "Switch (Steps)"
+    }
+  },
+  "129:89": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "129:84",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Negative Prompt)"
+    }
+  },
+  "129:128": {
+    "inputs": {
+      "value": 20
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Steps)"
+    }
+  },
+  "129:102": {
+    "inputs": {
+      "lora_name": "wan2.2\\wan2.2_i2v_lightx2v_4steps_lora_v1_low_noise.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "129:96",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  },
+  "129:131": {
+    "inputs": {
+      "value": true
+    },
+    "class_type": "PrimitiveBoolean",
+    "_meta": {
+      "title": "Enable 4steps LoRA?"
+    }
+  },
+  "129:122": {
+    "inputs": {
+      "value": 1
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (CFG)"
+    }
+  },
+  "129:86": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": 534261645700878,
+      "steps": [
+        "129:119",
+        0
+      ],
+      "cfg": [
+        "129:120",
+        0
+      ],
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 0,
+      "end_at_step": [
+        "129:125",
+        0
+      ],
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "129:104",
+        0
+      ],
+      "positive": [
+        "129:180",
+        0
+      ],
+      "negative": [
+        "129:180",
+        1
+      ],
+      "latent_image": [
+        "129:180",
+        2
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "SEED_KSAMPLER"
+    }
+  },
+  "129:85": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": 0,
+      "steps": [
+        "129:119",
+        0
+      ],
+      "cfg": [
+        "129:120",
+        0
+      ],
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": [
+        "129:125",
+        0
+      ],
+      "end_at_step": [
+        "129:119",
+        0
+      ],
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "129:103",
+        0
+      ],
+      "positive": [
+        "129:180",
+        0
+      ],
+      "negative": [
+        "129:180",
+        1
+      ],
+      "latent_image": [
+        "129:86",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "KSampler (Advanced)"
+    }
+  },
+  "129:118": {
+    "inputs": {
+      "value": 4
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (Steps)"
+    }
+  },
+  "129:124": {
+    "inputs": {
+      "value": 2
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Int (split_step)"
+    }
+  },
+  "129:180": {
+    "inputs": {
+      "width": [
+        "224",
+        0
+      ],
+      "height": [
+        "224",
+        1
+      ],
+      "length": [
+        "129:163",
+        1
+      ],
+      "batch_size": 1,
+      "positive": [
+        "129:93",
+        0
+      ],
+      "negative": [
+        "129:89",
+        0
+      ],
+      "vae": [
+        "129:90",
+        0
+      ],
+      "start_image": [
+        "221",
+        0
+      ],
+      "camera_conditions": [
+        "300",
+        0
+      ]
+    },
+    "class_type": "WanCameraImageToVideo",
+    "_meta": {
+      "title": "WanCameraImageToVideo"
+    }
+  },
+  "300": {
+    "inputs": {
+      "camera_pose": "Static",
+      "width": [
+        "224",
+        0
+      ],
+      "height": [
+        "224",
+        1
+      ],
+      "length": [
+        "129:163",
+        1
+      ]
+    },
+    "class_type": "WanCameraEmbedding",
+    "_meta": {
+      "title": "CAMERA_POSE"
+    }
+  }
+}

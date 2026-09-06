@@ -1,0 +1,14 @@
+# Generated output — every video, still, prompt log, and run history this
+# pipeline produces. Regenerated on every run; not source.
+output/
+
+# Local runtime state
+STOP
+__pycache__/
+*.pyc
+.claude/
+
+# Editor/OS cruft
+.vscode/
+Thumbs.db
+.DS_Store

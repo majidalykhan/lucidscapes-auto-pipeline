@@ -1,0 +1,46 @@
+{
+  "1": {
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LOAD_IMAGE"
+    },
+    "inputs": {
+      "image": "example.png"
+    }
+  },
+  "2": {
+    "class_type": "AILab_QwenVL",
+    "_meta": {
+      "title": "VIDEO_PROMPT_GEN"
+    },
+    "inputs": {
+      "model_name": "Qwen3-VL-2B-Instruct",
+      "quantization": "8-bit (Balanced)",
+      "attention_mode": "auto",
+      "preset_prompt": "🎬 Cinematic Description",
+      "custom_prompt": "Look at this image and write ONE cinematic camera-motion description in this exact house style. Study these two real examples first. EXAMPLE 1: Slow pan right, snow falling continuously and steadily throughout, house windows holding warm amber glow completely steady, car taillights glowing red completely still, city lights in valley far below completely still, snow heavy on pine trees completely still, large mountain peak completely still, chimney smoke drifting very slowly upward, everything cold and silent. EXAMPLE 2: Slow zoom in toward the train, snow covering entire valley floor completely still, train rear windows glowing warm amber completely steady, single red signal light glowing steadily beside tracks completely still, low fog drifting very slowly between valley walls, snow covered mountain walls on both sides completely still, straight tracks disappearing into fog completely still, everything vast and cold. Now write one for the actual image you are looking at, in exactly this style: a comma-separated list of short fragments, not flowing sentences. Your camera movement for this clip is fixed - you must open with exactly this phrase, word for word, and never use any other camera wording (no push-in, no crane, no tilt, no dolly, no different direction): Slow zoom in toward the subject. After that opening phrase, never mention the camera again. That movement continues at a constant, glacially slow pace for the whole 5-second clip: never combine it with another movement, never describe speeding up, stopping, or changing direction. Every warm light source visible (windows, lamps, headlights, taillights, signal lights) gets its own fragment ending in completely steady or completely still. Every other static element visible (parked vehicles, mountains, terrain, snow on trees, buildings, tracks, city lights) gets its own fragment ending in completely still. Only genuinely ambient motion actually visible in the image may move: falling snow or rain gets falling continuously and steadily throughout, drifting mist or smoke or steam gets drifting very slowly or rising very slowly. There are absolutely no people, human figures, or silhouettes anywhere in this scene, and none may appear, walk, or move into frame at any point in the clip. End with a short two-to-four-word mood tag like everything cold and silent or everything vast and cinematic. Use only plain ASCII punctuation - regular hyphens and straight quotes, no em dashes, no curly quotes, no special characters. Output only the finished description as one comma-separated line, nothing else - no title, no quotes, no explanation.",
+      "max_tokens": 400,
+      "keep_model_loaded": false,
+      "seed": 1,
+      "image": [
+        "1",
+        0
+      ]
+    }
+  },
+  "3": {
+    "class_type": "CR Save Text To File",
+    "_meta": {
+      "title": "SAVE_VIDEO_PROMPT"
+    },
+    "inputs": {
+      "multiline_text": [
+        "2",
+        0
+      ],
+      "output_file_path": "C:/ComfyUI/output/Work/LucidScapes - Auto Pipeline/output/02b_video_prompts",
+      "file_name": "prompt",
+      "file_extension": "txt"
+    }
+  }
+}

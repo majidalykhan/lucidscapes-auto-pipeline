@@ -1,0 +1,33 @@
+{
+  "1": {
+    "class_type": "AILab_QwenVL",
+    "_meta": {
+      "title": "PROMPT_GEN"
+    },
+    "inputs": {
+      "model_name": "Qwen3-VL-2B-Instruct",
+      "quantization": "8-bit (Balanced)",
+      "attention_mode": "auto",
+      "preset_prompt": "🪄 Prompt Refine & Expand",
+      "custom_prompt": "You are a prompt engineer for an AI cinematic still-image generator, writing in this exact house style. Study this real example first. EXAMPLE: Small white wooden house perched on steep mountain ridge at cold night, vintage red car parked on dirt path below house with taillights glowing, entire city spread far below in valley covered in cold blue-grey fog layer with thousands of distant amber city lights barely visible through fog, dark mountain silhouette rising opposite side of valley, house windows glowing warmly as only close warm light source, overcast cold night sky pressing down, pine trees beside house dark and cold, dirt path winding up steep ridge to house, Arri Alexa 35mm anamorphic, Kodak Vision3 500T, cold desaturated environment, only house windows and car taillights warm, zero warm ambient light on mountain or fog or trees, deep shadow detail, visible film grain, no people, no golden hour, no HDR. That example is a STYLE REFERENCE ONLY. Copying its wording, or its subject (a white wooden house on a mountain ridge with a parked car), is WRONG even if nothing else changes. Now write ONE new scene in exactly this style, built around this exact brief, and only this brief: a cozy wooden hut on a rocky hillside, cold steady rain, with steam or smoke rising slowly from a chimney and a vehicle parked nearby with its headlights off and only a taillight glowing. Weave every element of that brief naturally into the description: a comma-separated list of short concrete fragments, NOT flowing prose, NO metaphors, NO poetic language. This scene must contain zero people, human figures, or silhouettes of any kind. State exactly which object or objects supply the only warm light (windows, a lamp, headlights, taillights, a chimney's glow) and name what specifically stays cold with zero warm ambient light (the terrain, sky, vegetation, water, or fog around it). Any vehicle present is always parked and dark except its lights. End with this exact closing block, filled in for this scene: Arri Alexa 35mm anamorphic, Kodak Vision3 500T, cold desaturated environment, only [warm sources] warm, zero warm ambient light on [cold elements], deep shadow detail, visible film grain, no people, no golden hour, no HDR. Use only plain ASCII punctuation - regular hyphens and straight quotes, no em dashes, no curly quotes, no special characters. Output only the finished prompt as one comma-separated line, nothing else - no title, no quotes, no explanation.",
+      "max_tokens": 400,
+      "keep_model_loaded": false,
+      "seed": 1
+    }
+  },
+  "2": {
+    "class_type": "CR Save Text To File",
+    "_meta": {
+      "title": "SAVE_PROMPT"
+    },
+    "inputs": {
+      "multiline_text": [
+        "1",
+        0
+      ],
+      "output_file_path": "C:/ComfyUI/output/Work/LucidScapes - Auto Pipeline/output/00_prompts",
+      "file_name": "prompt",
+      "file_extension": "txt"
+    }
+  }
+}

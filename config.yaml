@@ -1,0 +1,281 @@
+# ===========================================================================
+# Lucidscapes pipeline settings.
+#
+# You set this up ONCE. After that you only ever touch your ComfyUI workflows
+# (resolution, steps, CFG, sampler all live in there, not here) and the
+# prompts file.
+# ===========================================================================
+
+comfy:
+  host: 127.0.0.1
+  port: 8188
+  # ComfyUI's own "input" folder. The pipeline copies files here so the loader
+  # nodes in each workflow can find them. Use YOUR real path.
+  #   Windows: C:/ComfyUI/ComfyUI/input
+  #   Linux:   /home/you/ComfyUI/input
+  input_dir: "C:/ComfyUI/input"
+  # ComfyUI's own "output" folder — the root every save node writes under,
+  # regardless of what filename_prefix or folder each individual node uses
+  # (a plain default, or a custom one like "Cozy Cinematic"). Setting this
+  # lets the pipeline delete ComfyUI's original copy of a file once its own
+  # organized copy is safely saved, so nothing ends up duplicated in two
+  # different folders. Leave blank to disable cleanup and keep both copies.
+  output_dir: "C:/ComfyUI/output"
+
+paths:
+  workflows: workflows
+  prompts_file: prompts/prompts.txt
+  output_root: output
+  final_folder: FINAL          # finished videos land here; this is what you check
+  ledger: output/ledger.json   # what has already been done
+
+defaults:
+  # Used whenever a prompt block has no VIDEO: line. Your motion rules never
+  # change, so most of the time you can leave VIDEO: out entirely.
+  motion_prompt: >
+    Locked cinematic shot. Nothing in the scene moves. Vehicles completely
+    frozen. Slow steady camera movement only. Falling rain, snow and faint mist drift
+    are the only motion. Film grain, no flicker.
+
+run:
+  max_hours: 10                    # hard stop, so it never runs into your morning
+  show_progress: true              # live step/percentage bar like ComfyUI's own page
+                                   # (needs: pip install websocket-client)
+  randomize_seed: true             # false = same seed every time (identical images)
+  fixed_seed: 123456789
+
+  # --- memory safety ---
+  free_vram_between_stages: true   # unload models between every stage. Keep true.
+  unload_wait_seconds: 8           # give the driver a moment to actually release
+  oom_retries: 2                   # if out of memory: unload, wait, try again
+  oom_wait_seconds: 45
+
+  # --- other safety ---
+  max_gpu_temp_c: 84               # pause and cool rather than push through
+  max_cooldown_minutes: 30         # if it won't cool in this long, stop for the night
+  min_free_disk_gb: 40
+
+  # Optional. If ComfyUI dies, run this to bring it back. Leave "" to disable.
+  # Windows example: "cmd /c start /min C:\\ComfyUI\\run_nvidia_gpu.bat"
+  # Linux example:   "systemctl --user restart comfyui"
+  comfy_restart_command: ""
+
+# ===========================================================================
+# The four stages, in order. Each one is a ComfyUI workflow exported with
+# Workflow -> Export (API).
+#
+#   title  = the name YOU gave the node in ComfyUI (right-click -> Title)
+#   key    = the setting on that node to change
+#   from   = where the value comes from:
+#              image_prompt   the IMAGE: line from the prompts file
+#              video_prompt   the VIDEO: line (or the default above)
+#              seed           a fresh random number
+#              previous_file  whatever the stage before produced
+#              literal        a fixed value you type in below
+# ===========================================================================
+
+stages:
+
+  - name: prompt
+    workflow: 00_prompt_gen.json
+    timeout_minutes: 5
+    # This stage produces a .txt, not media. Its output overwrites
+    # ctx["image_prompt"] for every stage after it (see sets:) rather than
+    # becoming previous_file — previous_file must keep pointing at the last
+    # real media file. No human-supplied idea anywhere: QwenVL invents the
+    # scene from scratch each job (from: literal, no {curly_brace} ctx
+    # value), so `seed` is wired here too — without it every job would get
+    # the same instruction and, since QwenVL samples from that, similar or
+    # identical prompts instead of a varied batch.
+    produces: prompt
+    sets: image_prompt
+    save_to: 00_prompts
+    extensions: [".txt"]
+    set:
+      - title: PROMPT_GEN
+        key: custom_prompt
+        from: template
+        template: >
+          You are a prompt engineer for an AI cinematic still-image
+          generator, writing in this exact house style. Study this real
+          example first. EXAMPLE: Small white wooden house perched on
+          steep mountain ridge at cold night, vintage red car parked on
+          dirt path below house with taillights glowing, entire city spread
+          far below in valley covered in cold blue-grey fog layer with
+          thousands of distant amber city lights barely visible through
+          fog, dark mountain silhouette rising opposite side of valley,
+          house windows glowing warmly as only close warm light source,
+          overcast cold night sky pressing down, pine trees beside house
+          dark and cold, dirt path winding up steep ridge to house, Arri
+          Alexa 35mm anamorphic, Kodak Vision3 500T, cold desaturated
+          environment, only house windows and car taillights warm, zero
+          warm ambient light on mountain or fog or trees, deep shadow
+          detail, visible film grain, no people, no golden hour, no HDR.
+          That example is a STYLE REFERENCE ONLY. Copying its wording, or
+          its subject (a white wooden house on a mountain ridge with a
+          parked car), is WRONG even if nothing else changes. Now write
+          ONE new scene in exactly this style, built around this exact
+          brief, and only this brief: {scene_brief}. Do not substitute a
+          different subject, weather or terrain than the brief names; only
+          add cold-environment and lighting details around it. Weave every
+          element of that brief naturally into the description: a
+          comma-separated list of short concrete fragments, NOT flowing
+          prose, NO metaphors, NO poetic language. This scene must contain
+          zero people, human figures, or silhouettes of any kind.
+          State exactly which object or objects supply the only warm light
+          (windows, a lamp, headlights, taillights, a chimney's glow) and
+          name what specifically stays cold with zero warm ambient light
+          (the terrain, sky, vegetation, water, or fog around it). Any
+          vehicle present is always parked and dark except its lights.
+          End with this exact closing block, filled in for this scene:
+          Arri Alexa 35mm anamorphic, Kodak Vision3 500T, cold desaturated
+          environment, only [warm sources] warm, zero warm ambient light
+          on [cold elements], deep shadow detail, visible film grain, no
+          people, no golden hour, no HDR. Use only plain ASCII punctuation
+          - regular hyphens and straight quotes, no em dashes, no curly
+          quotes, no special characters. Output only the finished prompt
+          as one comma-separated line, nothing else - no title, no quotes,
+          no explanation.
+      - {title: PROMPT_GEN, key: seed, from: seed}
+      - {title: SAVE_PROMPT, key: file_name, from: job_name}
+
+  - name: still
+    workflow: 01_flux_still.json
+    timeout_minutes: 20
+    save_to: 01_stills
+    extensions: [".png", ".jpg", ".jpeg", ".webp"]
+    set:
+      - {title: POSITIVE_PROMPT, key: text, from: image_prompt}
+      - {title: RandomNoise, key: seed, from: seed}
+      # The exported workflow's own save node defaults to the author's
+      # personal ComfyUI folder ("Cozy cinematic"), not this pipeline's
+      # output tree. Overriding it here (rather than editing the workflow
+      # JSON) survives every future Workflow -> Export (API) overwrite, the
+      # same way LOAD_IMAGE/LOAD_VIDEO/prompt/seed are already handled below.
+      # One shared staging root for all 4 media stages so ComfyUI's own
+      # copy — deleted right after download, see comfy_client._cleanup_source
+      # — always lands somewhere small, predictable and easy to eyeball if
+      # cleanup ever fails, instead of 4 unrelated scattered folders.
+      - {title: Save Image Pixaroma, key: SaveImageState, json_field: folder,
+         from: literal, value: "C:/ComfyUI/output/_lucid_staging/still"}
+
+  - name: video_prompt
+    workflow: 02b_video_prompt_gen.json
+    timeout_minutes: 5
+    # Same produces:/sets: mechanism as the 'prompt' stage above, but
+    # overwrites ctx["video_prompt"] instead, and looks at the still image
+    # (from: previous_file) rather than starting from plain text.
+    produces: prompt
+    sets: video_prompt
+    save_to: 02b_video_prompts
+    extensions: [".txt"]
+    set:
+      - {title: LOAD_IMAGE, key: image, from: previous_file}
+      - title: VIDEO_PROMPT_GEN
+        key: custom_prompt
+        from: template
+        template: >
+          Look at this image and write ONE cinematic camera-motion
+          description in this exact house style. Study these two real
+          examples first. EXAMPLE 1: Slow pan right, snow falling
+          continuously and steadily throughout, house windows holding warm
+          amber glow completely steady, car taillights glowing red
+          completely still, city lights in valley far below completely
+          still, snow heavy on pine trees completely still, large mountain
+          peak completely still, chimney smoke drifting very slowly
+          upward, everything cold and silent. EXAMPLE 2: Slow zoom in
+          toward the train, snow covering entire valley floor completely
+          still, train rear windows glowing warm amber completely steady,
+          single red signal light glowing steadily beside tracks
+          completely still, low fog drifting very slowly between valley
+          walls, snow covered mountain walls on both sides completely
+          still, straight tracks disappearing into fog completely still,
+          everything vast and cold. Now write one for the actual image you
+          are looking at, in exactly this style: a comma-separated list of
+          short fragments, not flowing sentences. Your camera movement for
+          this clip is fixed - you must open with exactly this phrase,
+          word for word, and never use any other camera wording (no
+          push-in, no crane, no tilt, no dolly, no different direction):
+          {camera_move}. After that opening phrase, never mention the
+          camera again. That movement continues at a constant, glacially
+          slow pace for the whole 5-second clip: never combine it with
+          another movement, never describe speeding up, stopping, or
+          changing direction. Every warm light source visible (windows,
+          lamps, headlights, taillights, signal lights) gets its own
+          fragment ending in completely steady or completely still. Every
+          other static element visible (parked vehicles, mountains,
+          terrain, snow on trees, buildings, tracks, city lights) gets its
+          own fragment ending in completely still. Only genuinely ambient
+          motion actually visible in the image may move: falling snow or
+          rain gets falling continuously and steadily throughout, drifting
+          mist or smoke or steam gets drifting very slowly or rising very
+          slowly. There are absolutely no people, human figures, or
+          silhouettes anywhere in this scene, and none may appear, walk,
+          or move into frame at any point in the clip. End with a short
+          two-to-four-word mood tag like everything cold and silent or
+          everything vast and cinematic. Use only plain ASCII punctuation
+          - regular hyphens and straight quotes, no em dashes, no curly
+          quotes, no special characters. Output only the finished
+          description as one comma-separated line, nothing else - no
+          title, no quotes, no explanation. Scene, for continuity:
+          {image_prompt}
+      - {title: VIDEO_PROMPT_GEN, key: seed, from: seed}
+      - {title: SAVE_VIDEO_PROMPT, key: file_name, from: job_name}
+
+  - name: video
+    # Swapped from WAN 2.2 Fun Camera Control (02_wan2.2_i2v.json, its
+    # structured camera_pose field via a separate WanCameraEmbedding node)
+    # to a plain WanImageToVideo workflow with NO structured camera field
+    # at all (02_wan2.2_i2v_noFunCamera.json) — camera direction is now
+    # driven purely by text, same as the rest of the motion description.
+    # ctx["camera_move"] is forced by Python in run_job() (see CAMERA_MOVES
+    # in pipeline.py) and the video_prompt stage's instruction above
+    # requires QwenVL to open with that exact phrase — letting QwenVL pick
+    # freely from six options was tried first and failed the same way the
+    # scene subject did (9 of 10 jobs came back "Slow pan left" regardless
+    # of the image or the instruction's own phrasing).
+    workflow: 02_wan2.2_i2v_noFunCamera.json
+    timeout_minutes: 45
+    save_to: 02_video_raw
+    extensions: [".mp4", ".webm", ".mkv", ".gif"]
+    set:
+      - {title: VIDEO_PROMPT, key: text, from: video_prompt}
+      - {title: LOAD_IMAGE, key: image, from: previous_file}
+      - {title: SEED_KSAMPLER, key: seed, from: seed}
+      # This workflow's negative prompt was empty in the exported file.
+      # Real runs of the Fun-Camera version showed people appearing in the
+      # generated video despite "no people" in the positive prompt text —
+      # WAN's own negative conditioning is a genuine second lever here
+      # (this graph wires it into both KSamplers' negative input, unlike
+      # some distilled/few-step models that ignore negative conditioning
+      # entirely), so use it rather than relying on the positive prompt
+      # alone.
+      - {title: NEGATIVE_PROMPT, key: text, from: literal,
+         value: "people, person, human, human figure, face, walking, running, pedestrian, silhouette of a person, fast motion, jerky motion, sudden movement, camera shake, blurry, low quality"}
+      # Core ComfyUI's SaveVideo, unlike Pixaroma's/VHS's save nodes,
+      # reports a genuinely relative subfolder for a relative prefix — no
+      # need for the absolute-path workaround used on the other stages.
+      - {title: Save Video, key: filename_prefix, from: literal,
+         value: "_lucid_staging/video/v"}
+
+  - name: upscale
+    workflow: 03_seedvr2.json
+    timeout_minutes: 60
+    save_to: 03_upscaled
+    extensions: [".mp4", ".webm", ".mkv"]
+    set:
+      # VHS_LoadVideo uses 'video'. Some loaders use 'file' or 'video_path'.
+      # Run:  python -m runner.pipeline inspect 03_seedvr2.json   to find out.
+      - {title: LOAD_VIDEO, key: video, from: previous_file}
+      - {title: "Video Combine 🎥🅥🅗🅢", key: filename_prefix, from: literal,
+         value: "C:/ComfyUI/output/_lucid_staging/upscale/v"}
+
+  - name: interpolate
+    workflow: 04_rife.json
+    timeout_minutes: 30
+    save_to: 04_frame_interpolate
+    extensions: [".mp4", ".webm", ".mkv"]
+    set:
+      - {title: LOAD_VIDEO, key: video, from: previous_file}
+      - {title: "Video Combine 🎥🅥🅗🅢", key: filename_prefix, from: literal,
+         value: "C:/ComfyUI/output/_lucid_staging/interpolate/v"}
