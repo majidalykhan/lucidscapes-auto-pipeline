@@ -23,7 +23,9 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import random
+import re
 import shutil
 import subprocess
 import sys
@@ -36,6 +38,7 @@ from pathlib import Path
 import yaml
 
 from .comfy_client import ComfyClient, ComfyError, OutOfMemory
+from .social.approvals import stage_job as stage_social_upload
 
 # Node titles can be anything the user typed in ComfyUI, emoji included (e.g.
 # Video Helper Suite's own "Video Combine 🎥🅥🅗🅢") and they end up in stdout
@@ -57,25 +60,27 @@ STOP_FILE = ROOT / "STOP"
 # ---------------------------------------------------------------------------
 # Camera direction, forced the same way as the scene brief below.
 #
-# The Fun-Camera-Control WAN workflow (WanCameraEmbedding's structured
-# camera_pose COMBO) has been dropped in favor of a plain WanImageToVideo
-# workflow with no structured camera field at all — camera direction is now
-# driven purely by QwenVL's text, same as the rest of the motion
-# description. Letting QwenVL pick freely from six named directions was
-# tried first and failed the same way the scene subject did: confirmed in
-# practice, 9 of 10 jobs in one batch came back "Slow pan left" regardless
-# of which direction the instruction listed first or how the image looked.
-# So Python forces the direction per job (build_scene_brief() below is the
-# same pattern for the scene subject) and the video_prompt stage's
-# instruction requires QwenVL to open with that exact phrase rather than
-# choosing one itself.
+# Letting QwenVL pick a camera direction freely was tried first and failed
+# the same way the scene subject did: confirmed in practice, 9 of 10 jobs
+# in one batch came back "Slow pan left" regardless of what the instruction
+# listed first or how the image looked. So Python forces the direction per
+# job (build_scene_brief() below is the same pattern for the scene subject)
+# and the video_prompt stage's instruction requires QwenVL to open with
+# that exact phrase rather than choosing one itself — that forcing
+# mechanism is unchanged by the LTX 2.5 switch. Only the wording changed,
+# to match the terse "Locked cinematic shot, slow steady push-in toward
+# the X..." style LTX responds best to (see config.yaml's video_prompt
+# template): each phrase here is a sentence-opening fragment ending right
+# before the subject noun, which QwenVL fills in from the actual image
+# ("slow steady push-in toward" + "the cabin" + "."). The keyword half of
+# each pair is what brief_adhered() substring-checks for.
 CAMERA_MOVES = [
-    ("Slow pan left", "pan left"),
-    ("Slow pan right", "pan right"),
-    ("Slow pan up", "pan up"),
-    ("Slow pan down", "pan down"),
-    ("Slow zoom in toward the subject", "zoom in"),
-    ("Slow zoom out from the subject", "zoom out"),
+    ("slow steady pan left across", "pan left"),
+    ("slow steady pan right across", "pan right"),
+    ("slow steady pan up across", "pan up"),
+    ("slow steady pan down across", "pan down"),
+    ("slow steady push-in toward", "push-in"),
+    ("slow steady pull-back from", "pull-back"),
 ]
 
 
@@ -144,7 +149,7 @@ def build_scene_brief() -> tuple[str, str]:
     return brief, subject_keyword
 
 
-def brief_adhered(text: str, subject_keyword: str) -> bool:
+def brief_adhered(text: str, required) -> bool:
     """False almost always means the model fell back to reciting its
     few-shot example instead of building a scene around the given brief —
     confirmed in practice: 3 of 10 jobs in one batch came back with the
@@ -152,8 +157,45 @@ def brief_adhered(text: str, subject_keyword: str) -> bool:
     mountain ridge...") despite each having a completely different subject
     in their brief (a train, a lighthouse, a train). A same-seed retry
     would likely reproduce the same failure, so run_job() must also bump
-    the seed when this returns False."""
-    return subject_keyword.lower() in text.lower()
+    the seed when this returns False.
+
+    `required` is either one keyword or an iterable of keywords, all of
+    which must be present - the video_prompt stage checks both the forced
+    camera-move phrase AND that it actually appended the TITLE:/etc.
+    metadata lines rather than only writing the motion description."""
+    keywords = [required] if isinstance(required, str) else list(required)
+    return all(k.lower() in text.lower() for k in keywords)
+
+
+def split_motion_and_metadata(text: str) -> tuple[str, str]:
+    """Split the video_prompt stage's combined response into the motion
+    description (everything before "TITLE:") and the metadata block
+    (from "TITLE:" onward). Returns (motion_text, metadata_text) - the
+    metadata_text is "" if the model never produced a TITLE: line at all
+    (parse_metadata() on an empty string just yields empty defaults)."""
+    match = re.search(r"TITLE\s*:", text, flags=re.IGNORECASE)
+    if not match:
+        return text.strip(), ""
+    return text[:match.start()].strip(), text[match.start():].strip()
+
+
+def parse_metadata(text: str) -> tuple[str, str, list[str]]:
+    """Parse the metadata stage's TITLE:/DESCRIPTION:/TAGS: lines. Same
+    line-prefix convention as read_prompts()'s IMAGE:/VIDEO: parsing.
+    Falls back to empty values for anything missing rather than raising -
+    a malformed metadata response should never take down an otherwise
+    successful job."""
+    title, description, tags = "", "", []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        upper = line.upper()
+        if upper.startswith("TITLE:"):
+            title = line[len("TITLE:"):].strip()
+        elif upper.startswith("DESCRIPTION:"):
+            description = line[len("DESCRIPTION:"):].strip()
+        elif upper.startswith("TAGS:"):
+            tags = [t.strip() for t in line[len("TAGS:"):].split(",") if t.strip()]
+    return title, description, tags
 
 
 # ---------------------------------------------------------------------------
@@ -197,6 +239,56 @@ def read_prompts(path: Path, default_motion: str) -> list[dict]:
         if image:
             prompts.append({"image_prompt": image,
                             "video_prompt": " ".join(video_parts).strip() or default_motion})
+    return prompts
+
+
+def read_flux_prompts(path: Path) -> list[tuple[int | None, str]]:
+    """Read a plain prompt list for the 'still' stage, as (id, prompt_text)
+    pairs so the job-start log line can show which prompt number is in use
+    - id is None for formats with no natural id field. Dispatches on file
+    extension - .json for a structured {"prompts": [{"prompt": "..."}]}
+    file (each entry already a complete, ready-to-use Flux prompt with
+    style baked in), anything else for the older dash-separated plain-text
+    format."""
+    if path.suffix.lower() == ".json":
+        return read_flux_prompts_json(path)
+    return read_flux_prompts_dashed_text(path)
+
+
+def read_flux_prompts_json(path: Path) -> list[tuple[int | None, str]]:
+    """{"prompts": [{"id": 1, "category": "...", "prompt": "..."}, ...]} -
+    in list order, id is only used for display (the job-start log line),
+    the order in the file is what actually drives next_flux_prompt()'s
+    position tracking, same as the text format below."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    return [(entry.get("id"), entry["prompt"]) for entry in data["prompts"]]
+
+
+def read_flux_prompts_dashed_text(path: Path) -> list[tuple[int | None, str]]:
+    """One prompt per block, blocks separated by a line of 3+ dashes (any
+    count - the file this was built for uses a 15-dash line, not
+    read_prompts()'s 3-dash convention, and isn't in IMAGE:/VIDEO: format
+    at all).
+
+    A block occasionally carries one extra short line alongside the real
+    prompt - e.g. a section header pasted in along with the surrounding
+    text. Every genuine prompt here is one long comma-separated paragraph,
+    so when a block has more than one non-blank line, only the longest one
+    is kept and the stray line is dropped.
+    """
+    prompts: list[tuple[int | None, str]] = []
+    current: list[str] = []
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if re.fullmatch(r"-{3,}", line):
+            if current:
+                prompts.append((None, max(current, key=len)))
+                current = []
+            continue
+        if line:
+            current.append(line)
+    if current:
+        prompts.append((None, max(current, key=len)))
     return prompts
 
 
@@ -250,9 +342,166 @@ class Pipeline:
         self.stages = self.cfg["stages"]
         self.out_root = ROOT / self.cfg["paths"]["output_root"]
         self.wf_dir = ROOT / self.cfg["paths"]["workflows"]
-        self.ledger = Ledger(ROOT / self.cfg["paths"]["ledger"])
+        # Always <output_root>/ledger.json, not a separately configurable
+        # path - it used to be ("output/ledger.json" in paths.ledger),
+        # which silently stopped following output_root the moment
+        # output_root pointed somewhere else (e.g. a different drive),
+        # leaving new runs writing history nobody would find next to the
+        # actual generated media.
+        # Refuse to start against an output root that has no history: a
+        # missing/unmounted drive or a mistyped path would otherwise be
+        # silently recreated empty, restarting prompts at index 0 and
+        # splitting ledger/approval state across two folders. First-ever
+        # setup: set LUCID_ALLOW_NEW_ROOT=1 once.
+        if not (self.out_root / "ledger.json").exists() and \
+                os.environ.get("LUCID_ALLOW_NEW_ROOT") != "1":
+            raise SystemExit(
+                f"output_root {self.out_root} has no ledger.json - drive not mounted or "
+                f"wrong path in config.yaml. Fix it, or set LUCID_ALLOW_NEW_ROOT=1 to "
+                f"deliberately start a fresh output folder.")
+        self.ledger = Ledger(self.out_root / "ledger.json")
         self.deadline = datetime.now() + timedelta(hours=self.run_cfg["max_hours"])
         self.out_root.mkdir(parents=True, exist_ok=True)
+
+        # Position within prompts.txt for any stage using `source:
+        # prompts_file` (see next_flux_prompt()). Persisted so "take prompts
+        # one by one until the end" spans multiple `run` invocations instead
+        # of restarting at the top of the file every time.
+        self._flux_prompts: list[str] | None = None
+        self._flux_prompt_index = 0
+        self._prompt_position_file = self.out_root / "prompts_position.json"
+        self._inflight_marker = self.out_root / "inflight_prompt.json"
+        if self._prompt_position_file.exists():
+            try:
+                self._flux_prompt_index = json.loads(
+                    self._prompt_position_file.read_text(encoding="utf-8")
+                ).get("next_index", 0)
+            except Exception:
+                pass
+
+    # ---- audio shaping ----
+
+    def shape_audio(self, path: Path, opts: dict) -> None:
+        """Re-shape Stable Audio's output loudness in place (ffmpeg).
+
+        The model bakes a "start loud, decay to silence" curve into
+        whatever length it's asked for (measured: ~-13 dB in the first
+        second down to -50..-87 dB by 8-10s, plus an occasional isolated
+        loud hit), and asking for a longer clip only stretches the decay.
+        So the stage generates a longer clip, and this keeps the first
+        `keep_seconds`, flattens the level (dynaudnorm), then applies the
+        wanted envelope: silent until fade_in_start, slow rise to
+        fade_out_start, fade out to the end. Best-effort - on any failure
+        the untouched original stays in place.
+        """
+        ff = shutil.which("ffmpeg") or shutil.which("ffmpeg.exe")
+        if not ff:
+            self.log("    audio        shaping skipped: ffmpeg not on PATH")
+            return
+        keep = opts.get("keep_seconds", 10)
+        fi_s, fi_d = opts.get("fade_in_start", 1), opts.get("fade_in_len", 7)
+        fo_s, fo_d = opts.get("fade_out_start", 8), opts.get("fade_out_len", 2)
+        floor = opts.get("fade_in_floor", 0.3)   # gain before/at the start of the swell
+        # smoothstep swell from `floor` at fade_in_start up to 1.0 at
+        # fade_in_start + fade_in_len (a plain afade-in would start at silence).
+        swell = (f"if(lt(t,{fi_s}),{floor},if(lt(t,{fi_s + fi_d}),"
+                 f"{floor}+(1-{floor})*pow((t-{fi_s})/{fi_d},2)*(3-2*(t-{fi_s})/{fi_d}),1))")
+        chain = (f"atrim=0:{keep},asetpts=N/SR/TB,"
+                 f"dynaudnorm=f=250:g=5:m=30:p=0.9:s=0,"
+                 f"volume='{swell}':eval=frame")
+        if fo_d > 0:   # fade_out_len 0 = no fade-out, sound runs to the last frame
+            chain += f",afade=t=out:st={fo_s}:d={fo_d}:curve=qsin"
+        tmp = path.with_name(path.stem + "_shaped.mp3")
+        try:
+            r = subprocess.run([ff, "-v", "error", "-y", "-i", str(path), "-af", chain,
+                                "-c:a", "libmp3lame", "-q:a", "2", str(tmp)],
+                               capture_output=True, text=True, timeout=120)
+            if r.returncode != 0 or not tmp.exists() or tmp.stat().st_size < 1000:
+                raise RuntimeError(r.stderr[-300:])
+            tmp.replace(path)
+            self.log(f"    audio        shaped: first {keep}s, soft start x{floor}, swell {fi_s}s->{fi_s + fi_d}s, "
+                     + (f"fade out {fo_s}s->{fo_s + fo_d}s" if fo_d > 0 else "no fade-out"))
+        except Exception as e:
+            tmp.unlink(missing_ok=True)
+            self.log(f"    audio        shaping failed, keeping original: {e}")
+
+    def grade_video(self, path: Path, job_name: str) -> None:
+        """Tonal grade (ffmpeg) of the freshly rendered LTX clip, before upscale.
+
+        Base grade, always on: a touch of black stretch, gamma lift and a
+        saturation trim - keeps the dark, moody, unsaturated look while
+        matching the still's brightness (the old fixed 1.2 contrast node
+        crushed shadows; ComfyUI's LevelsAdjust node collapses a clip to
+        one frame - hence ffmpeg, outside ComfyUI).
+
+        Accent grade, limited run: while <output_root>/grade_accent.json has
+        {"left": N > 0, ...}, ALSO boost saturation/contrast only where
+        pixels are both bright and warm (windows, lamps, neon, fire) via a
+        feathered mask, so the glow has life against the dark scene. The
+        counter is decremented BEFORE rendering so a failure can't repeat it.
+        The merge happens in RGB (gbrp): a grey mask on YUV leaks colour into
+        the sky.
+        """
+        ff = shutil.which("ffmpeg") or shutil.which("ffmpeg.exe")
+        if not ff:
+            self.log("    video        grade skipped: ffmpeg not on PATH")
+            return
+        b, g, sat = 0.012, 1.05, 0.86
+        accent = None
+        lift = ""          # phase 2: a little brightness/saturation, mainly highlights
+        flag = self.out_root / "grade_accent.json"
+        if flag.exists():
+            try:
+                o = json.loads(flag.read_text(encoding="utf-8"))
+                if int(o.get("left", 0)) > 0:
+                    accent = o
+                    o["left"] = int(o["left"]) - 1
+                    flag.write_text(json.dumps(o), encoding="utf-8")
+                elif o.get("after"):
+                    # The limited accent trial is over: from here on keep the
+                    # warm accent AND add the small highlight-led lift.
+                    accent = o
+                    a2 = o["after"]
+                    sat = a2.get("saturation", 1.04)
+                    lift = (f":brightness={a2.get('brightness', 0.015)},"
+                            f"curves=master='{a2.get('curve', '0/0 0.25/0.25 0.6/0.635 0.85/0.91 1/1')}'")
+            except Exception:
+                pass
+        base = (f"colorlevels=rimin={b}:gimin={b}:bimin={b},"
+                f"eq=gamma={g}:saturation={sat}{lift}")
+        if accent:
+            asat, acon = accent.get("saturation", 2.2), accent.get("contrast", 1.12)
+            thr = accent.get("threshold", 70)
+            m = (f"clip((0.2126*r(X,Y)+0.7152*g(X,Y)+0.0722*b(X,Y)-{thr})*3.6,0,255)"
+                 "*clip((r(X,Y)-b(X,Y))/30,0,1)")
+            fc = (f"[0:v]{base},format=gbrp,split=3[base][boost][m];"
+                  f"[boost]eq=saturation={asat}:contrast={acon}[boosted];"
+                  f"[m]geq=r='{m}':g='{m}':b='{m}',gblur=sigma=4[mask];"
+                  f"[base][boosted][mask]maskedmerge,format=yuv420p[out]")
+            vf = ["-filter_complex", fc, "-map", "[out]", "-map", "0:a?"]
+        else:
+            vf = ["-vf", base]
+        sharpen = float(os.environ.get("LUCID_SHARPEN", "0.15") or 0)
+        if sharpen > 0:   # after the grade, per the flow: grade -> sharpen -> upscale
+            un = f"unsharp=5:5:{sharpen}:5:5:0"
+            if accent:
+                vf[1] = vf[1].replace("format=yuv420p[out]", f"format=yuv420p,{un}[out]")
+            else:
+                vf[1] = vf[1] + "," + un
+        tmp = path.with_name(path.stem + "_graded.mp4")
+        try:
+            r = subprocess.run(
+                [ff, "-v", "error", "-y", "-i", str(path), *vf,
+                 "-c:v", "libx264", "-crf", "12", "-preset", "medium", "-pix_fmt", "yuv420p",
+                 "-c:a", "copy", str(tmp)],
+                capture_output=True, text=True, timeout=900)
+            if r.returncode != 0 or not tmp.exists() or tmp.stat().st_size < 10000:
+                raise RuntimeError(r.stderr[-300:])
+            tmp.replace(path)
+            self.log(f"    video        graded (base{' + WARM-ACCENT test' if accent else ''}): {job_name}")
+        except Exception as e:
+            tmp.unlink(missing_ok=True)
+            self.log(f"    video        grade failed, keeping original: {e}")
 
     # ---- logging ----
 
@@ -299,7 +548,14 @@ class Pipeline:
             self.log("ComfyUI is not responding and no restart command is set")
             return False
         self.log("ComfyUI is not responding — restarting it")
-        subprocess.Popen(cmd, shell=True)
+        # cwd matters here: launching this same command while inherited
+        # cwd was this project's own folder (not ComfyUI's own workspace
+        # root) produced a ComfyUI process where Triton couldn't find
+        # ptxas.exe and every QwenVL call failed - confirmed by relaunching
+        # the identical command with cwd fixed and a QwenVL call
+        # immediately succeeding. comfy-cli apparently resolves some paths
+        # relative to the caller's cwd rather than its own install root.
+        subprocess.Popen(cmd, shell=True, cwd="C:/ComfyUI")
         for _ in range(60):
             time.sleep(5)
             if self.comfy.is_up():
@@ -307,6 +563,89 @@ class Pipeline:
                 return True
         self.log("ComfyUI did not come back")
         return False
+
+    def periodic_cooldown(self) -> bool:
+        """Scheduled break every `cooldown_every_n_jobs` jobs, independent of
+        temperature - wait_if_hot() above is reactive (only triggers if the
+        GPU is actually running hot); this is a preventive pause for a long
+        unattended overnight batch, run unconditionally on a job count.
+
+        Stopping ComfyUI outright (rather than just the per-stage /free
+        call already used everywhere else) is deliberate: /free only
+        unloads model weights from VRAM, not whatever a custom node may
+        have accumulated in the Python process's own heap over many
+        sequential jobs. A full stop guarantees both VRAM and RAM are
+        genuinely empty for the whole cooldown window, not just "mostly"
+        - the small restart overhead afterward is cheap next to a 15 min
+        pause. Returns False if ComfyUI doesn't come back afterward, so
+        the caller can stop the run instead of failing every job from here
+        on.
+        """
+        minutes = self.run_cfg.get("cooldown_minutes", 15)
+        self.log(f"=== scheduled cooldown: stopping ComfyUI, "
+                 f"pausing {minutes} min to clear VRAM/RAM and let the GPU rest ===")
+        stop_cmd = self.run_cfg.get("comfy_stop_command")
+        if stop_cmd:
+            subprocess.run(stop_cmd, shell=True)
+        # A silent 15-minute sleep is indistinguishable from a hang to
+        # anyone watching the console (it was reported as "stuck" the first
+        # time this ran), so log a heartbeat every minute.
+        for remaining in range(minutes, 0, -1):
+            self.log(f"cooldown: {remaining} min left (ComfyUI is stopped on purpose)")
+            time.sleep(60)
+        if not self.ensure_comfy():
+            return False
+        # is_up() only confirms the HTTP server is bound, not that every
+        # custom node has finished importing / the Manager's registry
+        # fetch has settled - submitting a real job too soon after a fresh
+        # launch has caused spurious stage timeouts before (see CLAUDE.md).
+        # Cheap insurance given the alternative is losing a job for no
+        # real reason after just having paused 15 minutes anyway.
+        self.log("cooldown: ComfyUI is back up, giving it 30s to finish loading")
+        time.sleep(30)
+        self.log("=== cooldown complete, resuming ===")
+        return True
+
+    # ---- prompts.txt, for a `source: prompts_file` stage ----
+
+    def next_flux_prompt(self) -> tuple[int | None, str] | None:
+        """Pop the next unconsumed (id, prompt_text) pair from prompts.txt,
+        in file order. Returns None once the file is exhausted."""
+        if self._flux_prompts is None:
+            self._flux_prompts = read_flux_prompts(ROOT / self.cfg["paths"]["prompts_file"])
+        if self._flux_prompt_index >= len(self._flux_prompts):
+            return None
+        prompt = self._flux_prompts[self._flux_prompt_index]
+        self._flux_prompt_index += 1
+        self._prompt_position_file.write_text(
+            json.dumps({"next_index": self._flux_prompt_index}), encoding="utf-8")
+        return prompt
+
+    def _write_generation_data(self, generation_id: str, flux_image_prompt: str, video_prompt: str,
+                               title: str, description: str, tags: list[str]) -> None:
+        """generated_videos_data/generation_data.json - the one persistent
+        record for a generation, keyed by generation_id (job_name
+        throughout this pipeline): the still-image prompt, the motion
+        prompt, and the title/description/tags every platform's staging
+        call uploads alongside the video. Replaces the old scattered
+        per-job .txt files in 00_prompts/02b_video_prompts (now deleted
+        right after being read, see run_job()) and the old
+        videos_metadata.json - one id, one place to find everything about
+        that generation. Written once the video itself exists (see the
+        'video' stage in run_job()), same read-modify-write pattern as
+        Ledger."""
+        path = self.out_root / "generated_videos_data" / "generation_data.json"
+        data = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        data[generation_id] = {
+            "generation_id": generation_id,
+            "flux_image_prompt": flux_image_prompt,
+            "video_prompt": video_prompt,
+            "title": title,
+            "description": description,
+            "tags": tags,
+        }
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data, indent=2), encoding="utf-8")
 
     # ---- one stage ----
 
@@ -322,6 +661,12 @@ class Pipeline:
             source = item["from"]
             if source == "previous_file":
                 value = self.comfy.stage_input_file(ctx["previous_file"])
+            elif source == "audio_file":
+                # Same file-staging as previous_file (copies into ComfyUI's
+                # input folder, returns the "subfolder/name" a LoadAudio-
+                # style COMBO widget expects) but reads the audio stage's
+                # own output instead - see sets_file: audio_file above.
+                value = self.comfy.stage_input_file(ctx["audio_file"])
             elif source == "seed":
                 ComfyClient.set_seed(graph, item["title"], ctx["seed"])
                 continue
@@ -371,6 +716,18 @@ class Pipeline:
             # os.makedirs on its side — rather than through a normal ComfyUI
             # save node, so nothing else creates this folder first.
             out_dir.mkdir(parents=True, exist_ok=True)
+            # output_file_path is otherwise whatever was baked into the
+            # workflow JSON at export time - fine as long as output_root
+            # never changes, but the moment it does (e.g. moved to a
+            # different drive, as happened this session) that baked-in
+            # path silently stops matching out_dir and every job fails at
+            # its very first stage with a FileNotFoundError from the save
+            # node. Force it to the real out_dir every run instead of
+            # trusting the export, using the same node title file_name is
+            # already targeted on.
+            file_name_item = next((i for i in stage["set"] if i.get("key") == "file_name"), None)
+            if file_name_item:
+                ComfyClient.set_input(graph, file_name_item["title"], "output_file_path", str(out_dir))
 
         stage_name = stage["name"]
         files = self.comfy.run(
@@ -408,7 +765,7 @@ class Pipeline:
                 f"{stage['workflow']}, or widen 'extensions' in config.yaml."
             )
 
-        dest = out_dir / f"{ctx['job_name']}{Path(matches[-1]['filename']).suffix}"
+        dest = out_dir / f"{stage.get('file_prefix', '')}{ctx['job_name']}{Path(matches[-1]['filename']).suffix}"
         return self.comfy.download(matches[-1], dest)
 
     # ---- one job, all stages ----
@@ -426,19 +783,81 @@ class Pipeline:
         camera_move, camera_move_keyword = random.choice(CAMERA_MOVES)
         ctx = {"job_name": job_name, "seed": seed,
                "image_prompt": "", "video_prompt": "",
+               "video_title": "", "video_description": "", "video_tags": [],
                "scene_brief": scene_brief, "camera_move": camera_move,
-               "previous_file": None}
-        # Which ctx key a produces:prompt stage sets, and the keyword its
-        # text must contain to count as actually having followed the
+               "previous_file": os.environ.get("LUCID_START_IMAGE") or None}   # test-only: start from an existing still
+        # Which ctx key a produces:prompt stage sets, and the keyword(s)
+        # its text must contain to count as actually having followed the
         # forced brief/camera-move rather than drifting off it.
+        # video_prompt requires both the forced camera phrase AND the
+        # TITLE: line - it's a single combined QwenVL call now: the model
+        # looks at the still image once and writes the motion description
+        # plus the upload title/description/tags in the same response
+        # (originally a separate later "metadata" stage/call, folded in
+        # here after finding that a 3rd sequential QwenVL call in the same
+        # ComfyUI session was unreliably reproducing a PRIOR call's exact
+        # output verbatim instead of processing its own instruction - see
+        # git history/CLAUDE.md. Two QwenVL calls per job instead of three
+        # sidesteps that rather than chasing the root cause further).
         required_keywords = {"image_prompt": scene_subject_keyword,
-                             "video_prompt": camera_move_keyword}
+                             "video_prompt": (camera_move_keyword, "title:")}
 
+        # scene_brief is only meaningful when the 'prompt' stage actually
+        # builds image_prompt from it (QwenVL invention) - suppress it from
+        # the log when that stage is instead sourced from prompts.txt, so
+        # the line doesn't show a random brief that has nothing to do with
+        # what's actually about to be generated.
+        uses_prompts_file = any(s.get("source") == "prompts_file"
+                                and s.get("sets", "image_prompt") == "image_prompt"
+                                for s in self.stages)
+
+        # Consumed here, ahead of the stage loop below, purely so the
+        # job-start banner can show which prompt number this job is using
+        # - the loop's own source:prompts_file branch then just uses this
+        # same already-fetched value instead of pulling a second one.
+        prefetched_prompt = None
+        if uses_prompts_file:
+            prefetched_prompt = self.next_flux_prompt()
+            if prefetched_prompt is None:
+                self.log("prompt       prompts.txt is exhausted — stopping the run")
+                return False
+        prompt_id = prefetched_prompt[0] if prefetched_prompt else None
+        prompt_note = f"prompt #{prompt_id}  " if prompt_id is not None else ""
+
+        brief_note = "" if uses_prompts_file else f"brief: {scene_brief}  "
         self.log(f"--- job {index}/{total}: {job_name}  "
-                 f"brief: {scene_brief}  camera: {camera_move}")
+                 f"{prompt_note}{brief_note}camera: {camera_move}")
         started = time.time()
 
         for stage in self.stages:
+            if not stage.get("enabled", True):
+                continue
+            if stage.get("source") == "prompts_file":
+                # Bypasses QwenVL and run_stage() entirely: this stage's
+                # value comes straight from prompts.txt instead of being
+                # invented, one prompt consumed per job in file order.
+                sets_key = stage.get("sets", "image_prompt")
+                prompt_text = prefetched_prompt[1]
+                ctx[sets_key] = prompt_text
+                self.log(f"    {stage['name']:<12} from prompts.txt -> "
+                         f"{sets_key}: {prompt_text[:70]}...")
+                # A crash mid-job (power outage, process kill) skips both
+                # run_job()'s own return and run()'s per-job except block
+                # below, so nothing would normally record that this
+                # specific prompt was consumed but never finished - the
+                # position file alone can't distinguish "job completed
+                # cleanly" from "job was in flight when everything died".
+                # This marker exists for exactly that gap: written the
+                # moment a prompt is consumed, cleared the moment this job
+                # reaches either a normal return or run()'s except handler.
+                # If it's still there at the next startup, resume_production.py
+                # rolls prompts_position.json back so that prompt gets
+                # regenerated instead of silently skipped.
+                self._inflight_marker.write_text(
+                    json.dumps({"job_name": job_name,
+                                "index_consumed": self._flux_prompt_index - 1}),
+                    encoding="utf-8")
+                continue
             if not self.wait_if_hot():
                 return False
             if not self.ensure_comfy():
@@ -458,28 +877,90 @@ class Pipeline:
                         text = Path(result).read_text(encoding="utf-8", errors="replace").strip()
                         required = required_keywords.get(stage.get("sets"))
                         if required and not brief_adhered(text, required):
-                            # QwenVL ignored the forced brief/camera-move and
-                            # fell back to its few-shot example instead — a
-                            # same-seed retry would likely repeat it, so
-                            # bump the seed (also reused by every later
+                            # QwenVL ignored the forced brief/camera-move (or,
+                            # for video_prompt, skipped the TITLE:/etc. lines
+                            # entirely) and fell back to its few-shot example
+                            # instead — a same-seed retry would likely repeat
+                            # it, so bump the seed (also reused by every later
                             # stage, which is fine — it's a per-job value)
                             # and try this one stage again, once.
+                            missing = required if isinstance(required, str) else \
+                                ", ".join(k for k in required if k.lower() not in text.lower())
                             self.log(f"    {stage['name']:<12} ignored the required phrasing "
-                                     f"(no '{required}' in the output) "
+                                     f"(missing: {missing}) "
                                      f"— retrying with a fresh seed")
                             ctx["seed"] = random.randint(1, 2**31 - 1)
+                            # The first attempt's file is still sitting at
+                            # the exact path run_stage() predicts for the
+                            # retry too (job_name is unchanged) - CR Save
+                            # Text To File never overwrites, it renames to
+                            # _1/_2/... on collision instead. Without
+                            # deleting it first, run_stage() would keep
+                            # returning this SAME stale first-attempt path,
+                            # silently re-reading its old (non-adherent)
+                            # text forever instead of the retry's real
+                            # output, which would land in a _1 file no one
+                            # ever looks at. Confirmed happening in
+                            # practice via leftover _1.txt files on disk.
+                            Path(result).unlink(missing_ok=True)
                             result = self.run_stage(stage, ctx)
                             text = Path(result).read_text(encoding="utf-8", errors="replace").strip()
                             if not brief_adhered(text, required):
                                 self.log(f"    {stage['name']:<12} still ignored it "
                                          f"after retry — continuing anyway")
-                        ctx[stage["sets"]] = text
+                        if stage["name"] == "video_prompt":
+                            # Combined response: motion description, then
+                            # the TITLE:/DESCRIPTION:/TAGS: metadata lines.
+                            # ctx["video_prompt"] must stay JUST the motion
+                            # part — MiniMax reads it directly as its prompt
+                            # and would otherwise get the metadata text too.
+                            motion_text, metadata_text = split_motion_and_metadata(text)
+                            ctx["video_prompt"] = motion_text
+                            ctx["video_title"], ctx["video_description"], ctx["video_tags"] = \
+                                parse_metadata(metadata_text)
+                            transcript_text = motion_text
+                        else:
+                            ctx[stage["sets"]] = text
+                        # This stage's own scratch .txt (needed only so the
+                        # ComfyUI save node had somewhere to write, then
+                        # read back above) is not a persistent artifact -
+                        # everything worth keeping lives in one place now,
+                        # generated_videos_data/generation_data.json,
+                        # written once the job finishes. Deleting this
+                        # immediately is what actually stops 00_prompts/
+                        # and 02b_video_prompts/ from accumulating one file
+                        # per job forever.
+                        Path(result).unlink(missing_ok=True)
                         self.log(f"    {stage['name']:<12} ok in {time.time() - t0:>5.0f}s  "
                                  f"-> {stage['sets']}: {text[:70]}...")
                     else:
-                        ctx["previous_file"] = result
+                        # Most media stages feed the next one via
+                        # previous_file (still -> video -> upscale ->
+                        # interpolate all chain this way). The audio stage
+                        # is the odd one out: it also consumes
+                        # previous_file (the LTX video, to look at and
+                        # generate a music prompt from) but its OWN output
+                        # is an audio file, not the next video in the
+                        # chain - sets_file: audio_file routes it into a
+                        # separate ctx key instead, so previous_file still
+                        # points at the LTX video for the upscale stage
+                        # right after it.
+                        dest_key = stage.get("sets_file", "previous_file")
+                        if stage["name"] == "video":
+                            self.grade_video(Path(result), job_name)
+                        if stage.get("shape_audio"):
+                            self.shape_audio(Path(result), stage["shape_audio"])
+                        ctx[dest_key] = result
                         self.log(f"    {stage['name']:<12} ok in {time.time() - t0:>5.0f}s  "
                                  f"-> {Path(result).name}")
+                        if stage["name"] == "video":
+                            # The video itself now exists - write the one
+                            # consolidated record for this generation
+                            # (image prompt, motion prompt, title/
+                            # description/tags - all parsed earlier).
+                            self._write_generation_data(
+                                job_name, ctx["image_prompt"], ctx["video_prompt"],
+                                ctx["video_title"], ctx["video_description"], ctx["video_tags"])
                     break
                 except OutOfMemory:
                     # Recoverable. Drop everything from VRAM, breathe, try again.
@@ -506,6 +987,25 @@ class Pipeline:
         self.ledger.record(job_name, status="done", file=str(final), seed=seed,
                            minutes=round(mins, 1), image_prompt=ctx["image_prompt"][:400],
                            video_prompt=ctx["video_prompt"][:400])
+
+        try:
+            fallback = ctx["video_prompt"][:400] or ctx["image_prompt"][:400]
+            stage_social_upload(
+                ROOT, self.out_root, job_name, final,
+                scene_text=ctx["image_prompt"],
+                title=ctx["video_title"] or job_name,
+                description=ctx["video_description"] or fallback,
+                tags=ctx["video_tags"],
+            )
+            self.log("    social       staged on YouTube (queued)/Facebook/Instagram; "
+                     "Discord review post follows once the YouTube upload completes")
+        except Exception as e:
+            # The video itself is done and safely in FINAL/ regardless of
+            # this - a social-staging failure must never look like the
+            # whole job failed, and must never lose or re-do the video.
+            self.log(f"    social       staging failed, video is still in FINAL/: {e}")
+
+        self._inflight_marker.unlink(missing_ok=True)
         return True
 
     # ---- the whole run ----
@@ -534,10 +1034,23 @@ class Pipeline:
                     f"\n=== {datetime.now()} :: job {i}/{limit}\n{traceback.format_exc()}")
                 self.ledger.record(f"{datetime.now():%Y%m%d_%H%M%S}_{uuid.uuid4().hex[:8]}",
                                    status="failed", error=str(e)[:400])
+                # This is a clean, logged failure (we're inside the except
+                # block, not dead) - the job reached a real resolution, it
+                # just wasn't a good one. Leave the pipeline's existing
+                # "log it and move on to the next prompt" behavior alone;
+                # the marker is only meant to flag a prompt that never got
+                # ANY resolution because the whole process died.
+                self._inflight_marker.unlink(missing_ok=True)
                 self.comfy.free_memory()
                 time.sleep(10)
             finally:
                 self.clear_staging()
+
+            cooldown_n = self.run_cfg.get("cooldown_every_n_jobs")
+            if cooldown_n and i % cooldown_n == 0 and i < limit and not self.blocked():
+                if not self.periodic_cooldown():
+                    self.log("stopping: ComfyUI did not come back after scheduled cooldown")
+                    break
 
         self.comfy.free_memory()
         self.log(f"=== finished: {completed}/{limit} completed — {self.ledger.summary()} ===")

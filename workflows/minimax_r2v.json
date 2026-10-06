@@ -1,0 +1,379 @@
+{
+  "115": {
+    "inputs": {
+      "aspect_ratio": "9:16 (Portrait Widescreen)",
+      "megapixels": 0.9,
+      "multiple": 32
+    },
+    "class_type": "ResolutionSelector",
+    "_meta": {
+      "title": "Resolution Selector (Size)"
+    }
+  },
+  "119": {
+    "inputs": {
+      "vae_name": "minimax\\minimax_h3_video_vae_fp16.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "120": {
+    "inputs": {
+      "vae_name": "minimax\\minimax_h3_audio_vae_fp32.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "Load VAE"
+    }
+  },
+  "121": {
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "120",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "122": {
+    "inputs": {
+      "samples": [
+        "125",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE Decode"
+    }
+  },
+  "123": {
+    "inputs": {
+      "sampler_name": "euler"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "KSamplerSelect"
+    }
+  },
+  "124": {
+    "inputs": {
+      "scheduler": "simple",
+      "steps": 8,
+      "denoise": 1,
+      "model": [
+        "153",
+        0
+      ]
+    },
+    "class_type": "BasicScheduler",
+    "_meta": {
+      "title": "BasicScheduler"
+    }
+  },
+  "125": {
+    "inputs": {
+      "noise": [
+        "129",
+        0
+      ],
+      "guider": [
+        "126",
+        0
+      ],
+      "sampler": [
+        "123",
+        0
+      ],
+      "sigmas": [
+        "124",
+        0
+      ],
+      "latent_image": [
+        "136",
+        1
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "SamplerCustomAdvanced"
+    }
+  },
+  "126": {
+    "inputs": {
+      "model": [
+        "153",
+        0
+      ],
+      "conditioning": [
+        "136",
+        0
+      ]
+    },
+    "class_type": "BasicGuider",
+    "_meta": {
+      "title": "Basic Guider"
+    }
+  },
+  "127": {
+    "inputs": {
+      "unet_name": "minimax_h3\\minimax_h3_ref2va_pruned_fp8_scaled.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "Load Diffusion Model"
+    }
+  },
+  "128": {
+    "inputs": {
+      "clip_name": "minimax_h3\\qwen3vl_32b_minimax_h3_nvfp4_awq_2.safetensors",
+      "type": "minimax",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP"
+    }
+  },
+  "129": {
+    "inputs": {
+      "noise_seed": [
+        "149",
+        0
+      ]
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "RandomNoise"
+    }
+  },
+  "131": {
+    "inputs": {
+      "expression": "max(5, round(a * 24)) + (5 - (max(5, round(a * 24)) % 17)) % 17",
+      "values.a": [
+        "132",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "Math Expression"
+    }
+  },
+  "132": {
+    "inputs": {
+      "value": 10
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Float (Duration)"
+    }
+  },
+  "136": {
+    "inputs": {
+      "prompt": [
+        "138",
+        0
+      ],
+      "width": [
+        "115",
+        0
+      ],
+      "height": [
+        "115",
+        1
+      ],
+      "length": [
+        "131",
+        1
+      ],
+      "ref_image_size": "match",
+      "clip": [
+        "128",
+        0
+      ],
+      "vae": [
+        "119",
+        0
+      ],
+      "audio_vae": [
+        "120",
+        0
+      ],
+      "ref_images.ref_image_0": [
+        "137",
+        0
+      ],
+      "ref_images.ref_image_1": [
+        "139",
+        0
+      ],
+      "ref_images.ref_image_2": [
+        "141",
+        0
+      ],
+      "ref_images.ref_image_3": [
+        "142",
+        0
+      ],
+      "ref_images.ref_image_4": [
+        "143",
+        0
+      ],
+      "ref_images.ref_image_5": [
+        "147",
+        0
+      ]
+    },
+    "class_type": "MiniMaxH3ReferenceToVideo",
+    "_meta": {
+      "title": "MiniMax H3 Reference to Video"
+    }
+  },
+  "137": {
+    "inputs": {
+      "image": "Earbud (1).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "138": {
+    "inputs": {
+      "value": "subject_definitions: product = matte-black wireless earbud charging case, rounded rectangular form, per reference images 1/2/3/4; environment = dark moody surface with single top-left key light, per reference image 5; no human, no hands\n\nsummary: A cinematic 15-second product reveal — the case emerges from darkness, the camera moves in to reveal material detail, the lid opens to activate the LED and show the earbuds, then the camera pulls back to place the case in its environment.\n\nretention_analysis: case geometry, hinge line, matte finish, and proportions must stay consistent with reference images across every stage of the sequence; the open-lid state, earbud placement, and blue LED glow must match reference image 4 exactly; no distortion or shape drift during camera movement or the lid-opening transition\n\ndetailed_description: \n0-3s: darkness holds, then a single shaft of light rakes across the closed case from top-left, revealing its form and matte texture (per image 1/3)\n3-6s: camera pushes in to a macro angle on the case surface, grazing light reveals fine texture and seam detail (per image 2)\n6-10s: camera pulls back slightly as the lid lifts open in one smooth motion, revealing both earbuds nested inside, the LED indicator glows blue (per image 4)\n10-15s: camera continues pulling back and settles on a wider framing, the case now resting on the dark textured surface from the environment plate (per image 5), LED remains a small glowing accent, composition holds for the final beat\n\noverall_soundscape: low sub-bass rumble under the opening reveal, soft rising whoosh synced to the light sweep, a precise magnetic hinge click as the lid opens, followed by a soft electronic power-on chime as the LED activates, ambient room tone fades in during the final pull-back\n\nnon_diegetic_music: minimal cinematic drone builds through the first half, a confident percussive hit lands exactly as the lid opens and LED glows on, bass drop follows, arrangement swells briefly into a final sustained chord as the shot settles, clean fade to silence"
+    },
+    "class_type": "PrimitiveStringMultiline",
+    "_meta": {
+      "title": "Input Text (Prompt)"
+    }
+  },
+  "139": {
+    "inputs": {
+      "image": "Earbud (2).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "141": {
+    "inputs": {
+      "image": "Earbud (3).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "142": {
+    "inputs": {
+      "image": "Earbud (4).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "143": {
+    "inputs": {
+      "image": "Earbud (5).png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "146": {
+    "inputs": {
+      "sage_attention": "auto",
+      "allow_compile": false,
+      "model": [
+        "127",
+        0
+      ]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "147": {
+    "inputs": {
+      "image": "Flux.2 Dev_2026-09-02_15-55-11_1024x1024_001_463223388676200.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "Load Image"
+    }
+  },
+  "149": {
+    "inputs": {
+      "SeedState": "{\"runSeed\":4847702461049439}",
+      "seed": 4847702461049439
+    },
+    "class_type": "PixaromaSeed",
+    "_meta": {
+      "title": "Seed Pixaroma"
+    }
+  },
+  "150": {
+    "inputs": {
+      "fps": 24,
+      "video_frames": [
+        "122",
+        0
+      ],
+      "audio": [
+        "121",
+        0
+      ],
+      "SaveVideoState": "{\"version\":1,\"folder\":\"C:\\\\ComfyUI\\\\output\\\\Work\\\\Portfolio\\\\PIECE 1 — Product Ad\\\\02_raw_gen\",\"pattern\":\"minimax_%date:yyyy-MM-dd%_%date:hh-mm-ss%_%counter%_4847702461049439_%fps%_%duration%\",\"format\":\"mp4\",\"quality\":75,\"bitDepth\":10,\"trimToAudio\":false,\"audioFadeMs\":0,\"embedWorkflow\":true,\"saveOnRun\":true,\"dateStyle\":\"yyyy-MM-dd\",\"counterDigits\":3,\"folded\":false,\"hideBarWhenFolded\":false,\"showOpen\":true,\"showDownload\":true,\"showFolder\":true,\"showMp4\":true,\"showMp4Hq\":true}"
+    },
+    "class_type": "PixaromaSaveVideo",
+    "_meta": {
+      "title": "Save Video Pixaroma"
+    }
+  },
+  "153": {
+    "inputs": {
+      "model": [
+        "155",
+        0
+      ],
+      "LoraLoaderState": "{\"version\":1,\"sep\":\", \",\"cacheMode\":\"last\",\"loras\":[{\"name\":\"minimax\\\\minimax_h3_fl2v_turbo_4step_v1.1_768p_comfyui_bf16.safetensors\",\"on\":true,\"sm\":1,\"sc\":1,\"triggers\":[]}]}"
+    },
+    "class_type": "PixaromaLoraLoader",
+    "_meta": {
+      "title": "LoRA Loader Pixaroma"
+    }
+  },
+  "155": {
+    "inputs": {
+      "lora_name": "minimax\\h3-realism-people-t2v-i2v-r2v.safetensors",
+      "strength_model": 0.8,
+      "model": [
+        "146",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "Load LoRA"
+    }
+  }
+}

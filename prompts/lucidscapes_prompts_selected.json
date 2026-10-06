@@ -1,0 +1,45 @@
+{
+  "brand": "Lucidscapes",
+  "model": "Flux 2 Dev",
+  "style_lock": {
+    "camera": "Arri Alexa 35mm anamorphic lens",
+    "film": "Kodak Vision3 500T film grain",
+    "aspect_ratio": "9:16 vertical",
+    "palette": "cold desaturated \u2014 ice blue, slate grey, deep charcoal",
+    "warm_sources": "practical only \u2014 cabin windows, campfires, headlights, lamp posts",
+    "forbidden": [
+      "people",
+      "golden hour",
+      "HDR",
+      "warm ambient light on natural surfaces",
+      "vehicles with lights unless parked"
+    ]
+  },
+  "prompts": [
+    {
+      "id": 5,
+      "category": "Alpine Cabin \u2014 Night",
+      "prompt": "Cinematic close aerial, remote alpine hut on rocky snow-dusted ledge at deep blue hour, two amber windows glow intensely against near-dark sky, silhouette of jagged peak overhead, foreground of cracked granite boulders with snow pooled in crevices, no people, stars barely visible through thin cloud cover, chimney smoke threads upward, cold silence atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 8,
+      "category": "Alpine Cabin \u2014 Rain",
+      "prompt": "Cinematic wide shot, rustic alpine hut in autumn mountain rain, amber window glow reflects in puddles on the rocky path leading to the door, dark rain-soaked timber walls, heavy grey clouds pressing down on surrounding peaks, rain streaks visible against the darker treeline, chimney smoke immediately dissolved by rain, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 10,
+      "category": "Forest House \u2014 Rain",
+      "prompt": "Cinematic wide frontal shot, isolated white timber house in dark pine forest during heavy rain, amber porch light and window glow reflecting in large rain puddle in foreground, rain streaks cutting diagonally across dark tree trunks, chimney smoke curling in wet air, no people, deep dark forest behind house fading to black, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 22,
+      "category": "Lakeside Cabin \u2014 Rain",
+      "prompt": "Cinematic ground shot, dark timber lake cabin in heavy rain, amber porch lantern glowing, rain pocking the surface of the dark lake in foreground, cabin reflection broken and shimmering in the rain-disturbed water, chimney smoke in wet air, no people, dark wet forest surroundings, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 30,
+      "category": "Bonfire Camp \u2014 Rain",
+      "prompt": "Cinematic wide shot, campfire burning under natural rock overhang in heavy rain, amber and orange fire reflects on wet rock and puddles, dark forest visible through rain curtain beyond the shelter, rain streaming down over the overhang edge, camp gear barely visible in darkness, no people, warm fire vs cold rain contrast, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    }
+  ]
+}

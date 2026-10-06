@@ -32,6 +32,10 @@
       "images": [
         "1",
         0
+      ],
+      "audio": [
+        "10",
+        0
       ]
     },
     "class_type": "VHS_VideoCombine",
@@ -53,6 +57,15 @@
     "class_type": "VHS_LoadVideo",
     "_meta": {
       "title": "LOAD_VIDEO"
+    }
+  },
+  "10": {
+    "inputs": {
+      "audio": "a_00004.mp3"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "LOAD_AUDIO"
     }
   }
 }

@@ -1,0 +1,212 @@
+{
+  "1": {
+    "inputs": {
+      "ckpt_name": "Stable Audio\\stable_audio_3_medium.safetensors"
+    },
+    "class_type": "CheckpointLoaderSimple",
+    "_meta": {
+      "title": "Load Checkpoint"
+    }
+  },
+  "4": {
+    "inputs": {
+      "clip_name": "stable_audio\\t5gemma_b_b_ul2.safetensors",
+      "type": "stable_audio",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP 1"
+    }
+  },
+  "5": {
+    "inputs": {
+      "text": [
+        "30",
+        0
+      ],
+      "clip": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP Text Encode (Prompt)"
+    }
+  },
+  "8": {
+    "inputs": {
+      "seed": 338434885366170,
+      "steps": 8,
+      "cfg": 1,
+      "sampler_name": "lcm",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "1",
+        0
+      ],
+      "positive": [
+        "5",
+        0
+      ],
+      "negative": [
+        "9",
+        0
+      ],
+      "latent_image": [
+        "12",
+        0
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "9": {
+    "inputs": {
+      "conditioning": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "ConditioningZeroOut",
+    "_meta": {
+      "title": "Conditioning Zero Out"
+    }
+  },
+  "10": {
+    "inputs": {
+      "samples": [
+        "8",
+        0
+      ],
+      "vae": [
+        "1",
+        2
+      ]
+    },
+    "class_type": "VAEDecodeAudio",
+    "_meta": {
+      "title": "VAE Decode Audio"
+    }
+  },
+  "11": {
+    "inputs": {
+      "filename_prefix": "audio/stableaudio",
+      "quality": "V0",
+      "audio": [
+        "10",
+        0
+      ]
+    },
+    "class_type": "SaveAudioMP3",
+    "_meta": {
+      "title": "SAVE_AUDIO"
+    }
+  },
+  "12": {
+    "inputs": {
+      "seconds": [
+        "13",
+        1
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLatentAudio",
+    "_meta": {
+      "title": "Empty Latent Audio"
+    }
+  },
+  "13": {
+    "inputs": {
+      "value": 10
+    },
+    "class_type": "PixaromaNumber",
+    "_meta": {
+      "title": "Duration (1-380 seconds)"
+    }
+  },
+  "25": {
+    "inputs": {
+      "clip_name": "stable_audio\\gemma4_e4b_it_fp8_scaled.safetensors",
+      "type": "stable_diffusion",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "Load CLIP 2"
+    }
+  },
+  "26": {
+    "inputs": {
+      "prompt": [
+        "28",
+        0
+      ],
+      "max_length": 256,
+      "sampling_mode": "on",
+      "sampling_mode.temperature": 0.7,
+      "sampling_mode.top_k": 64,
+      "sampling_mode.top_p": 0.95,
+      "sampling_mode.min_p": 0.05,
+      "sampling_mode.repetition_penalty": 1.05,
+      "sampling_mode.seed": 0,
+      "sampling_mode.presence_penalty": 0,
+      "thinking": false,
+      "use_default_template": true,
+      "clip": [
+        "25",
+        0
+      ],
+      "video": [
+        "34",
+        0
+      ]
+    },
+    "class_type": "TextGenerate",
+    "_meta": {
+      "title": "Generate Text"
+    }
+  },
+  "28": {
+    "inputs": {
+      "text": "Analyze the video and create one detailed music prompt for an instrumental music generation model, for a cozy cinematic ambient video brand (slow, quiet, wintry, meditative locked-camera scenes - cabins, snow, campfires, mountains, gentle rain, no people).\n\nThe prompt must describe music that fits this cozy, calm, slightly melancholic mood and the specific visual setting, colors, and atmosphere of the video. Convert visual elements into musical choices. Favor ambient, neo-classical, soft cinematic, and gentle lo-fi textures over anything upbeat, aggressive, electronic, or percussion-driven. The tempo is always slow and gentle, matching a locked, barely-moving camera shot - never energetic or driving.\n\nInclude: genre, subgenre, instrumentation, rhythm, tempo or BPM, mood, arrangement, production style, sound texture, and cinematic use case.\n\nRules:\nThe music must be one continuous, evenly dense bed of sustained pads, warm drones, soft strings or gentle piano held throughout, at least three layered sustained sounds present the whole time.\nNo drums, no percussion, no sudden hits, no isolated single notes, no lone solo instrument, no sound effects, no stingers or accents - nothing that stands out on its own. It must swell very slowly and gently and never spike.\nOutput only one final music prompt.\nDo not describe the video directly unless it helps the music.\nDo not mention any product or model name.\nDo not use bullet points.\nDo not add explanations.\nDo not write labels like Genre, Mood, BPM, TrackType, or Music.\nDo not include vocals unless the video clearly suggests vocal textures - if included, keep them wordless, non-lyrical, or atmospheric only.\nKeep the prompt between 70 and 120 words.\nMake it suitable for an instrumental music generation model.\n\nCreate a polished prompt that sounds like a professional music direction brief for a slow, cozy, wintry cinematic ambient video."
+    },
+    "class_type": "PixaromaText",
+    "_meta": {
+      "title": "Image to Prompt Formula"
+    }
+  },
+  "30": {
+    "inputs": {
+      "text": "Epic cinematic neo-classical orchestral piece with sweeping strings, deep brass swells, and melancholic piano melodies, evoking vast, cold alpine wilderness. The rhythm should be slow and deliberate, around 70 BPM, featuring sparse, resonant percussion mimicking falling snow. The texture is grand yet isolated, utilizing minor keys and heavy reverb to convey a profound sense of awe and solitude. Perfect for a high-stakes journey through desolate, beautiful mountain passes.",
+      "source": [
+        "26",
+        0
+      ]
+    },
+    "class_type": "PixaromaShowText",
+    "_meta": {
+      "title": "Show Text Pixaroma"
+    }
+  },
+  "34": {
+    "inputs": {
+      "video": "video_20260908_225100_dbd65732.mp4",
+      "force_rate": 0,
+      "custom_width": 0,
+      "custom_height": 0,
+      "frame_load_cap": 0,
+      "skip_first_frames": 0,
+      "select_every_nth": 1,
+      "format": "AnimateDiff"
+    },
+    "class_type": "VHS_LoadVideo",
+    "_meta": {
+      "title": "LOAD_VIDEO"
+    }
+  }
+}

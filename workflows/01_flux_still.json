@@ -8,7 +8,7 @@
   },
   "120": {
     "inputs": {
-      "ResolutionState": "{\"mode\":\"preset\",\"ratio\":\"9:16\",\"w\":768,\"h\":1344,\"custom_w\":1024,\"custom_h\":1024,\"custom_ratio_w\":4,\"custom_ratio_h\":3,\"snap\":16}"
+      "ResolutionState": "{\"mode\":\"custom\",\"ratio\":\"9:16\",\"w\":1088,\"h\":1920,\"custom_w\":1088,\"custom_h\":1920,\"custom_ratio_w\":9,\"custom_ratio_h\":16,\"snap\":16}"
     },
     "class_type": "PixaromaResolution",
     "_meta": {
@@ -119,10 +119,7 @@
   },
   "98:102": {
     "inputs": {
-      "switch": [
-        "98:104",
-        0
-      ],
+      "switch": true,
       "on_false": [
         "98:12",
         0
@@ -168,7 +165,7 @@
   },
   "98:16": {
     "inputs": {
-      "sampler_name": "dpmpp_2m"
+      "sampler_name": "euler"
     },
     "class_type": "KSamplerSelect",
     "_meta": {
@@ -178,7 +175,7 @@
   "98:101": {
     "inputs": {
       "lora_name": "flux2\\Flux_2-Turbo-LoRA_comfyui.safetensors",
-      "strength_model": 1,
+      "strength_model": 0.35,
       "model": [
         "98:12",
         0

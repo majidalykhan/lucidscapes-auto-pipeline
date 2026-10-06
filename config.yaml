@@ -24,10 +24,14 @@ comfy:
 
 paths:
   workflows: workflows
-  prompts_file: prompts/prompts.txt
+  prompts_file: prompts/lucidscapes_prompts_batch2.json
+  # Moved off the project's own (low-space) drive (was G:, now Code/output). An absolute
+  # path here overrides everything below it - see Pipeline.__init__, this
+  # is plain pathlib "/" behavior, not special-cased. ledger.json and every
+  # social/approval state file (pending_approvals.json, the YouTube queue)
+  # all live under here too, not just the media - see CLAUDE.md.
   output_root: output
   final_folder: FINAL          # finished videos land here; this is what you check
-  ledger: output/ledger.json   # what has already been done
 
 defaults:
   # Used whenever a prompt block has no VIDEO: line. Your motion rules never
@@ -38,7 +42,11 @@ defaults:
     are the only motion. Film grain, no flicker.
 
 run:
-  max_hours: 10                    # hard stop, so it never runs into your morning
+  # Generous safety net, not the real stop control - resume_production.py
+  # is meant to be started/stopped manually (Ctrl+C) according to actual
+  # usage, so this only matters if it's ever left running unattended by
+  # accident.
+  max_hours: 24
   show_progress: true              # live step/percentage bar like ComfyUI's own page
                                    # (needs: pip install websocket-client)
   randomize_seed: true             # false = same seed every time (identical images)
@@ -50,15 +58,51 @@ run:
   oom_retries: 2                   # if out of memory: unload, wait, try again
   oom_wait_seconds: 45
 
+  # Scheduled preventive break, independent of temperature - see
+  # periodic_cooldown() in pipeline.py. Every 5 jobs, ComfyUI is stopped
+  # outright (not just the per-stage /free) for 15 minutes: a full process
+  # stop is the only way to guarantee BOTH VRAM and whatever a custom node
+  # may have accumulated in system RAM over many sequential jobs are
+  # genuinely released, not just "mostly". Set cooldown_every_n_jobs to 0
+  # or remove it to disable.
+  cooldown_every_n_jobs: 5
+  cooldown_minutes: 5
+
   # --- other safety ---
   max_gpu_temp_c: 84               # pause and cool rather than push through
   max_cooldown_minutes: 30         # if it won't cool in this long, stop for the night
   min_free_disk_gb: 40
 
-  # Optional. If ComfyUI dies, run this to bring it back. Leave "" to disable.
-  # Windows example: "cmd /c start /min C:\\ComfyUI\\run_nvidia_gpu.bat"
-  # Linux example:   "systemctl --user restart comfyui"
-  comfy_restart_command: ""
+  # If ComfyUI dies mid-run, ensure_comfy() runs this and waits up to 5 min
+  # for it to come back before the next stage attempt. Mirrors
+  # C:\ComfyUI\ComfyUI.bat: the C:\ComfyUI\venv interpreter (the same thing
+  # as "call venv\Scripts\activate") with --use-sage-attention. Deliberately
+  # WITHOUT that .bat's --listen 0.0.0.0: the pipeline only ever talks to
+  # 127.0.0.1, and 0.0.0.0 would expose ComfyUI's unauthenticated API to the
+  # whole LAN for no benefit here.
+  # History (2026-09-24): ComfyUI was briefly running from the SYSTEM Python
+  # (updated core needing comfy-aimdo 0.5.3, transformers 5.x) - that broke
+  # the FP8 Qwen model (transformers 5.16.1 tp-plan bug, then 5.17.0 wanting
+  # a Hugging Face-hosted FP8 kernel via `kernels`). It was rolled back to the
+  # venv stack (transformers 4.57.6), where QwenVL works. Do NOT point this at
+  # the system Python without re-verifying QwenVL first.
+  # cwd must be C:/ComfyUI - callers set it (launching from this project's
+  # folder once broke Triton's ptxas lookup). Output is appended to the same
+  # log file comfy-cli used to write, so resume_production.py's live tail
+  # and the "where are the comfy logs" answer stay the same.
+  # PYTHONUTF8=1 is required, not cosmetic: with output redirected to a file
+  # Python uses the cp1252 locale encoding instead of the console's, and
+  # ComfyUI's custom nodes print emoji at startup -> "UnicodeEncodeError:
+  # 'charmap' codec can't encode" and ComfyUI dies before it ever binds the
+  # port (this killed the first scheduled-cooldown restart, 2026-09-25).
+  # ComfyUI.bat never hits it because it writes to a real console.
+  comfy_restart_command: "set \"PYTHONUTF8=1\" && \"C:\\ComfyUI\\venv\\Scripts\\python.exe\" main.py --use-sage-attention --port 8188 >> \"C:\\ComfyUI\\user\\comfyui_8188.log\" 2>&1"
+  # Used by periodic_cooldown() to stop ComfyUI outright for the scheduled
+  # break above. --port because comfy-cli only tracks instances IT launched;
+  # a comfyui.bat/main.py launch is "untracked" and a bare "comfy stop"
+  # would refuse it. Still refuses anything it can't positively identify as
+  # ComfyUI, so it can't hit an unrelated process.
+  comfy_stop_command: "\"C:\\Users\\PC\\AppData\\Local\\Programs\\Python\\Python314\\Scripts\\comfy.exe\" stop --port 8188"
 
 # ===========================================================================
 # The four stages, in order. Each one is a ComfyUI workflow exported with
@@ -77,6 +121,14 @@ run:
 stages:
 
   - name: prompt
+    # Sourced from prompts/lucidscapes_prompts.json instead of invented by
+    # QwenVL - one prompt consumed per job, in file order, position
+    # persisted in prompts_position.json so a later run continues where
+    # this one left off. See read_flux_prompts_json()/next_flux_prompt()
+    # in pipeline.py. Everything below this line (workflow/set/etc.) is
+    # simply unused while `source` is set - left in place so reverting to
+    # QwenVL invention later is a one-line change (delete `source:`).
+    source: prompts_file
     workflow: 00_prompt_gen.json
     timeout_minutes: 5
     # This stage produces a .txt, not media. Its output overwrites
@@ -97,45 +149,58 @@ stages:
         from: template
         template: >
           You are a prompt engineer for an AI cinematic still-image
-          generator, writing in this exact house style. Study this real
-          example first. EXAMPLE: Small white wooden house perched on
-          steep mountain ridge at cold night, vintage red car parked on
-          dirt path below house with taillights glowing, entire city spread
-          far below in valley covered in cold blue-grey fog layer with
-          thousands of distant amber city lights barely visible through
-          fog, dark mountain silhouette rising opposite side of valley,
-          house windows glowing warmly as only close warm light source,
-          overcast cold night sky pressing down, pine trees beside house
-          dark and cold, dirt path winding up steep ridge to house, Arri
-          Alexa 35mm anamorphic, Kodak Vision3 500T, cold desaturated
-          environment, only house windows and car taillights warm, zero
-          warm ambient light on mountain or fog or trees, deep shadow
-          detail, visible film grain, no people, no golden hour, no HDR.
-          That example is a STYLE REFERENCE ONLY. Copying its wording, or
-          its subject (a white wooden house on a mountain ridge with a
-          parked car), is WRONG even if nothing else changes. Now write
-          ONE new scene in exactly this style, built around this exact
-          brief, and only this brief: {scene_brief}. Do not substitute a
-          different subject, weather or terrain than the brief names; only
-          add cold-environment and lighting details around it. Weave every
-          element of that brief naturally into the description: a
-          comma-separated list of short concrete fragments, NOT flowing
-          prose, NO metaphors, NO poetic language. This scene must contain
-          zero people, human figures, or silhouettes of any kind.
-          State exactly which object or objects supply the only warm light
-          (windows, a lamp, headlights, taillights, a chimney's glow) and
-          name what specifically stays cold with zero warm ambient light
-          (the terrain, sky, vegetation, water, or fog around it). Any
-          vehicle present is always parked and dark except its lights.
-          End with this exact closing block, filled in for this scene:
-          Arri Alexa 35mm anamorphic, Kodak Vision3 500T, cold desaturated
+          generator, writing in one fixed house style: a comma-separated
+          list of short concrete fragments, never flowing prose, never
+          metaphor or poetic language - but still vivid and specific in
+          word choice, never generic or flat.
+
+
+          STRUCTURE (always, in this order):
+
+          - The main subject and its setting
+
+          - Weather and atmosphere
+
+          - Exactly which object(s) supply the only warm light (state them
+          explicitly: windows, a lamp, headlights, taillights, a chimney's
+          glow)
+
+          - What stays cold with zero warm ambient light (name it
+          explicitly: the terrain, sky, vegetation, water, or fog)
+
+          - Any vehicle present: always parked and dark, lights off except
+          taillights if mentioned
+
+          - Zero people, human figures, or silhouettes of any kind, ever
+
+          - End with this closing block, with its two bracketed
+          placeholders replaced by the actual warm source(s) and cold
+          element(s) from your own scene and the square brackets removed -
+          do not write the words "warm sources" or "cold elements", do not
+          keep any brackets, and do not write the phrases "closing block"
+          or "filled in for the scene" anywhere in your answer: Arri Alexa
+          35mm anamorphic, Kodak Vision3 500T, cold desaturated
           environment, only [warm sources] warm, zero warm ambient light
           on [cold elements], deep shadow detail, visible film grain, no
-          people, no golden hour, no HDR. Use only plain ASCII punctuation
-          - regular hyphens and straight quotes, no em dashes, no curly
-          quotes, no special characters. Output only the finished prompt
-          as one comma-separated line, nothing else - no title, no quotes,
-          no explanation.
+          people, no golden hour, no HDR
+
+
+          FORMAT EXAMPLE ONLY - do not reuse this subject, these objects,
+          or this wording. It shows structure, not content: a structure
+          parked on a slope at night, a vehicle nearby with one light
+          glowing, a wide cold landscape beyond, [closing block].
+
+
+          YOUR SCENE - this is the only brief to use, build the entire
+          description around it: {scene_brief}
+
+
+          Write one new scene now, built strictly around the brief above.
+          Use only plain ASCII punctuation - regular hyphens and straight
+          quotes, no em dashes, no curly quotes, no special characters.
+          Output only the finished prompt as one comma-separated line: no
+          title, no quotes, no explanation, no reference to the format
+          example.
       - {title: PROMPT_GEN, key: seed, from: seed}
       - {title: SAVE_PROMPT, key: file_name, from: job_name}
 
@@ -144,6 +209,10 @@ stages:
     timeout_minutes: 20
     save_to: 01_stills
     extensions: [".png", ".jpg", ".jpeg", ".webp"]
+    # Every media file is named "<file_prefix><job_name>.<ext>" -
+    # file_prefix defaults to "" if omitted. job_name is this pipeline's
+    # generation_id throughout - see generated_videos_data/generation_data.json.
+    file_prefix: "image_"
     set:
       - {title: POSITIVE_PROMPT, key: text, from: image_prompt}
       - {title: RandomNoise, key: seed, from: seed}
@@ -175,94 +244,214 @@ stages:
         key: custom_prompt
         from: template
         template: >
-          Look at this image and write ONE cinematic camera-motion
-          description in this exact house style. Study these two real
-          examples first. EXAMPLE 1: Slow pan right, snow falling
-          continuously and steadily throughout, house windows holding warm
-          amber glow completely steady, car taillights glowing red
-          completely still, city lights in valley far below completely
-          still, snow heavy on pine trees completely still, large mountain
-          peak completely still, chimney smoke drifting very slowly
-          upward, everything cold and silent. EXAMPLE 2: Slow zoom in
-          toward the train, snow covering entire valley floor completely
-          still, train rear windows glowing warm amber completely steady,
-          single red signal light glowing steadily beside tracks
-          completely still, low fog drifting very slowly between valley
-          walls, snow covered mountain walls on both sides completely
-          still, straight tracks disappearing into fog completely still,
-          everything vast and cold. Now write one for the actual image you
-          are looking at, in exactly this style: a comma-separated list of
-          short fragments, not flowing sentences. Your camera movement for
-          this clip is fixed - you must open with exactly this phrase,
-          word for word, and never use any other camera wording (no
-          push-in, no crane, no tilt, no dolly, no different direction):
-          {camera_move}. After that opening phrase, never mention the
-          camera again. That movement continues at a constant, glacially
-          slow pace for the whole 5-second clip: never combine it with
-          another movement, never describe speeding up, stopping, or
-          changing direction. Every warm light source visible (windows,
-          lamps, headlights, taillights, signal lights) gets its own
-          fragment ending in completely steady or completely still. Every
-          other static element visible (parked vehicles, mountains,
-          terrain, snow on trees, buildings, tracks, city lights) gets its
-          own fragment ending in completely still. Only genuinely ambient
-          motion actually visible in the image may move: falling snow or
-          rain gets falling continuously and steadily throughout, drifting
-          mist or smoke or steam gets drifting very slowly or rising very
-          slowly. There are absolutely no people, human figures, or
-          silhouettes anywhere in this scene, and none may appear, walk,
-          or move into frame at any point in the clip. End with a short
-          two-to-four-word mood tag like everything cold and silent or
-          everything vast and cinematic. Use only plain ASCII punctuation
-          - regular hyphens and straight quotes, no em dashes, no curly
-          quotes, no special characters. Output only the finished
-          description as one comma-separated line, nothing else - no
-          title, no quotes, no explanation. Scene, for continuity:
-          {image_prompt}
+          You are a prompt engineer writing SHORT, literal motion
+          instructions for an AI image-to-video generator (LTX 2.5). It
+          responds best to a compact, plain-language instruction, NOT a
+          rich adjective-heavy description - every sentence is short and
+          direct, never a comma-separated list of fragments.
+
+
+          STRUCTURE - always exactly four sentences, in this order, run
+          together as one plain paragraph:
+
+          1. "Locked cinematic shot, {camera_move} the [name the one real
+          subject you see in the image]." End the sentence there.
+
+          2. "Everything in the frame stays completely still and
+          unchanged - [name every other real, static element actually
+          visible in the image, joined with commas and 'and'] remain
+          exactly as shown."
+
+          3. "The only motion allowed: [name only the ambient motion(s)
+          actually visible in the image - falling snow, falling rain,
+          drifting mist or steam, flickering firelight with drifting
+          embers, rippling water - never invent motion that is not
+          visible]."
+
+          4. "No other movement, no camera shake, no movement beyond the
+          [repeat the camera movement in a few words], no added elements,
+          no people."
+
+
+          Zero people, human figures, or silhouettes of any kind, ever -
+          none may appear, walk, or move into frame at any point in the
+          clip.
+
+
+          YOUR CAMERA MOVEMENT - sentence 1 must open with this exact
+          phrase, word for word, and never use any other camera wording:
+          {camera_move}
+
+
+          Look at the actual image now and write the four-sentence motion
+          instruction above, built strictly around that camera movement
+          and only what is actually visible in the image. Output it as ONE
+          unbroken paragraph, all four sentences run together with no line
+          breaks between them. Do not add a fifth sentence, do not add
+          mood commentary, do not describe lighting or color beyond naming
+          what is lit - exactly four sentences, then stop.
+
+
+          AFTER that paragraph, on the lines immediately following it,
+          also write three lines of upload metadata for the same video - a
+          title, description, and tags, the way a real video-upload page
+          looks, not the way a filmmaker describes a shot:
+
+          TITLE: a title under ten words, leading with curiosity or
+          emotion, a viewer should want to click rather than already know
+          what they will see - never a flat label like "Cabin in the
+          snow"
+
+          DESCRIPTION: two to three plain sentences about the mood,
+          written for a viewer, not a shot list
+
+          TAGS: five to ten short comma-separated tags, one or two words
+          each
+
+
+          Complete example of the motion paragraph and all three metadata
+          lines together, in the exact format required - only the wording
+          changes:
+
+          Locked cinematic shot, slow steady push-in toward the cabin.
+          Everything in the frame stays completely still and unchanged -
+          the cabin, mountain peaks, pine trees, stone path, and chimney
+          smoke remain exactly as shown. The only motion allowed: snow
+          falling steadily throughout the frame. No other movement, no
+          camera shake, no movement beyond the slow push-in, no added
+          elements, no people.
+
+          TITLE: This Quiet Place Almost Feels Alive
+
+          DESCRIPTION: A remote cabin sits wrapped in winter stillness as
+          snow falls without end. The only warmth comes from a single
+          glowing window against the cold. It is the kind of scene that
+          makes you want to stay a while.
+
+          TAGS: cozy, winter, snowfall, cabin, ambient, cinematic, night,
+          peaceful
+
+
+          Output exactly the motion paragraph followed by those three
+          metadata lines for the real scene below, in that exact order,
+          nothing before the paragraph and nothing after the tags - no
+          markdown, no quotes, no explanation, no reference to this format
+          example. Use only plain ASCII punctuation - regular hyphens and
+          straight quotes, no em dashes, no curly quotes, no special
+          characters.
+          Scene, for continuity only: {image_prompt}
       - {title: VIDEO_PROMPT_GEN, key: seed, from: seed}
       - {title: SAVE_VIDEO_PROMPT, key: file_name, from: job_name}
 
   - name: video
-    # Swapped from WAN 2.2 Fun Camera Control (02_wan2.2_i2v.json, its
-    # structured camera_pose field via a separate WanCameraEmbedding node)
-    # to a plain WanImageToVideo workflow with NO structured camera field
-    # at all (02_wan2.2_i2v_noFunCamera.json) — camera direction is now
-    # driven purely by text, same as the rest of the motion description.
-    # ctx["camera_move"] is forced by Python in run_job() (see CAMERA_MOVES
-    # in pipeline.py) and the video_prompt stage's instruction above
-    # requires QwenVL to open with that exact phrase — letting QwenVL pick
-    # freely from six options was tried first and failed the same way the
-    # scene subject did (9 of 10 jobs came back "Slow pan left" regardless
-    # of the image or the instruction's own phrasing).
-    workflow: 02_wan2.2_i2v_noFunCamera.json
+    # Switched to LTX 2.5 (02_ltx2.5_i2v.json) - measured better output
+    # than both MiniMax and WAN. Two-pass architecture: a half-resolution
+    # base sampling pass (SEED_BASE, 9-step sigma schedule), then a 2x
+    # spatial latent upscale (LTXV Spatial Upsampler, model
+    # ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0), then a light full-
+    # resolution refine sampling pass (SEED_REFINE, 4-step sigma
+    # schedule). Video and audio are generated jointly the whole way
+    # through (LTXVConcatAVLatent/LTXVSeparateAVLatent carry both in one
+    # latent), both derived from the same frame-count math node, so they
+    # start out perfectly in sync at the base 5-second duration.
+    #
+    # Node titles renamed in the exported JSON for config targeting
+    # (several were duplicated/generic in the raw export - see CLAUDE.md's
+    # "Node titles, not IDs" gotcha): "Load First Frame" -> LOAD_IMAGE,
+    # the positive CLIP Text Encode -> VIDEO_PROMPT (the negative one,
+    # a fixed anti-artifact string never touched per-job, -> NEGATIVE_
+    # PROMPT), the two RandomNoise nodes -> SEED_BASE (base pass) /
+    # SEED_REFINE (refine pass), the spatial upscaler's loader/upsampler
+    # -> "Load Spatial Upscale Model" / "LTXV Spatial Upsampler" to
+    # disambiguate from the new temporal ones below.
+    #
+    # TEMPORAL UPSCALE + AUDIO FIX (added this session, not part of the
+    # original export): a second LatentUpscaleModelLoader ("Load Temporal
+    # Upscale Model", model ltx-2.5-latent-temporal-upscaler-x2-bf16-1.0)
+    # feeds a second LTXVLatentUpsampler ("LTXV Temporal Upsampler"),
+    # inserted on the VIDEO latent only, right after the refine pass and
+    # before VAE Decode (Tiled) - doubles frame count at the same 24fps,
+    # so the exported clip plays ~10s instead of ~5s. Audio has no
+    # temporal-upscale model of its own (it's a video-latent operation),
+    # so left alone it would still decode at the original ~5s and leave
+    # the back half of the video silent. Fixed with a new AudioConcat
+    # node ("AUDIO_LOOP_EXTEND") that concatenates the decoded audio with
+    # itself (self -> self, direction "after"), doubling it to match -
+    # a seamless loop is a non-issue here since every clip's soundscape
+    # is continuous ambient texture (falling snow/rain, fire crackle,
+    # wind), not a discrete musical phrase that would expose the seam.
+    # CreateVideo now reads from AUDIO_LOOP_EXTEND instead of the raw
+    # LTXV Audio VAE Decode output.
+    workflow: 02_ltx2.5_i2v.json
     timeout_minutes: 45
     save_to: 02_video_raw
     extensions: [".mp4", ".webm", ".mkv", ".gif"]
+    file_prefix: "video_"
     set:
       - {title: VIDEO_PROMPT, key: text, from: video_prompt}
       - {title: LOAD_IMAGE, key: image, from: previous_file}
-      - {title: SEED_KSAMPLER, key: seed, from: seed}
-      # This workflow's negative prompt was empty in the exported file.
-      # Real runs of the Fun-Camera version showed people appearing in the
-      # generated video despite "no people" in the positive prompt text —
-      # WAN's own negative conditioning is a genuine second lever here
-      # (this graph wires it into both KSamplers' negative input, unlike
-      # some distilled/few-step models that ignore negative conditioning
-      # entirely), so use it rather than relying on the positive prompt
-      # alone.
-      - {title: NEGATIVE_PROMPT, key: text, from: literal,
-         value: "people, person, human, human figure, face, walking, running, pedestrian, silhouette of a person, fast motion, jerky motion, sudden movement, camera shake, blurry, low quality"}
-      # Core ComfyUI's SaveVideo, unlike Pixaroma's/VHS's save nodes,
-      # reports a genuinely relative subfolder for a relative prefix — no
-      # need for the absolute-path workaround used on the other stages.
+      - {title: SEED_BASE, key: noise_seed, from: seed}
+      - {title: SEED_REFINE, key: noise_seed, from: seed}
+      # Same output-folder consolidation as every other media stage.
       - {title: Save Video, key: filename_prefix, from: literal,
          value: "_lucid_staging/video/v"}
 
+  - name: audio
+    # Stable Audio 3 (02b_stable_audio.json) looks at the LTX video itself
+    # (LOAD_VIDEO <- previous_file) and writes a music prompt via its own
+    # Generate Text + "Image to Prompt Formula" nodes, then samples real
+    # audio at the same ~10s duration LTX's temporal upscaler produces.
+    # Replaces relying on LTX's own generated audio, which required a
+    # fragile in-graph VHS_LoadVideo audio pass-through in the upscale/
+    # interpolate stages that spawned ffmpeg inside ComfyUI's own process
+    # and failed 100% of the time on a freshly-produced clip (root cause
+    # never fully pinned down - a pre-flight check using this project's
+    # own, separately-proven-reliable ffmpeg call didn't stop it either,
+    # pointing at something specific to subprocess-spawning from inside
+    # ComfyUI's process rather than a plain file-freshness race). LTX's
+    # own audio node is left as-is (harmless, just unused) rather than
+    # touched - not worth the risk of surgery on a jointly-sampled
+    # video+audio latent graph for a negligible compute saving.
+    #
+    # sets_file: audio_file (instead of the default previous_file) is
+    # what keeps this stage's own output (an audio file) from overwriting
+    # previous_file - the upscale stage right after this one still needs
+    # previous_file to be the LTX video, not this stage's mp3.
+    workflow: 02b_stable_audio.json
+    timeout_minutes: 10
+    save_to: 05_audio
+    extensions: [".mp3"]
+    file_prefix: "audio_"
+    sets_file: audio_file
+    # Generate 20s, then keep the first 10s and re-shape it (see
+    # Pipeline.shape_audio): steady sound from 1s to the end, soft first second, no fades (old note: swell/fade out.
+    shape_audio: {keep_seconds: 10, fade_in_start: 0.8, fade_in_len: 0.4, fade_in_floor: 0.3, fade_out_start: 10, fade_out_len: 0}
+    set:
+      - {title: "Duration (1-380 seconds)", key: value, from: literal, value: 20}
+      - {title: LOAD_VIDEO, key: video, from: previous_file}
+      - {title: KSampler, key: seed, from: seed}
+      - {title: SAVE_AUDIO, key: filename_prefix, from: literal,
+         value: "_lucid_staging/audio/a"}
+
   - name: upscale
+    # Confirmed-good 2K tuning already baked into 03_seedvr2.json:
+    # resolution 1440, blocks_to_swap 0, swap_io_components false,
+    # batch_size 8 (~448-456s upscale stage, ~17-18 min total job).
+    #
+    # Deliberately processes LTX's native 5s/121-frame output, NOT a
+    # temporally-upscaled 10s one - measured 1102s (vs ~450s for 121
+    # frames) when this stage had to upscale 241 frames instead, since
+    # SeedVR2's per-frame diffusion-based upscaling is far more expensive
+    # than RIFE's lightweight interpolation. The 5s->10s duration doubling
+    # now happens at the interpolate stage below (RIFE) instead of in the
+    # LTX workflow's own temporal upscaler, for exactly that reason - see
+    # the interpolate stage's comment. Audio is NOT attached here anymore
+    # either, since it would mismatch a still-5s video - see below.
     workflow: 03_seedvr2.json
     timeout_minutes: 60
     save_to: 03_upscaled
     extensions: [".mp4", ".webm", ".mkv"]
+    file_prefix: "video_"
     set:
       # VHS_LoadVideo uses 'video'. Some loaders use 'file' or 'video_path'.
       # Run:  python -m runner.pipeline inspect 03_seedvr2.json   to find out.
@@ -271,11 +460,21 @@ stages:
          value: "C:/ComfyUI/output/_lucid_staging/upscale/v"}
 
   - name: interpolate
+    # Re-enabled: this is now where the 5s LTX/SeedVR2 output becomes the
+    # final ~10s video, via RIFE's cheap frame interpolation instead of
+    # LTX's own (expensive, because it feeds 2x frames into SeedVR2)
+    # temporal upscaler. Also now the audio-attachment point - LOAD_AUDIO
+    # (a plain LoadAudio node added to this workflow, feeding
+    # VHS_VideoCombine's audio input directly) moved here from the
+    # upscale stage, since this is the stage that actually produces a
+    # video whose duration matches the audio stage's fixed 10s output.
     workflow: 04_rife.json
     timeout_minutes: 30
     save_to: 04_frame_interpolate
     extensions: [".mp4", ".webm", ".mkv"]
+    file_prefix: "video_"
     set:
       - {title: LOAD_VIDEO, key: video, from: previous_file}
+      - {title: LOAD_AUDIO, key: audio, from: audio_file}
       - {title: "Video Combine 🎥🅥🅗🅢", key: filename_prefix, from: literal,
          value: "C:/ComfyUI/output/_lucid_staging/interpolate/v"}

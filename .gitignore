@@ -2,6 +2,11 @@
 # pipeline produces. Regenerated on every run; not source.
 output/
 
+# Secrets — API tokens, OAuth client secrets, page access tokens. Never commit.
+credentials/
+.credentials/
+*.env
+
 # Local runtime state
 STOP
 __pycache__/
@@ -12,3 +17,7 @@ __pycache__/
 .vscode/
 Thumbs.db
 .DS_Store
+
+check_approvals_errors.log
+*.bak*
+references/

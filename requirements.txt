@@ -2,3 +2,8 @@ requests>=2.31
 PyYAML>=6.0
 mcp>=1.2       # only needed if you use the Claude Code MCP server
 websocket-client>=1.7
+
+# social auto-upload (runner/social/) — YouTube Data API v3 OAuth + upload
+google-api-python-client>=2.140
+google-auth-httplib2>=0.2
+google-auth-oauthlib>=1.2

@@ -1,0 +1,514 @@
+{
+  "brand": "Lucidscapes",
+  "model": "Flux 2 Dev",
+  "style_lock": {
+    "camera": "Arri Alexa 35mm anamorphic lens",
+    "film": "Kodak Vision3 500T film grain",
+    "aspect_ratio": "9:16 vertical",
+    "palette": "cold desaturated — ice blue, slate grey, deep charcoal",
+    "warm_sources": "practical only — cabin windows, campfires, headlights, lamp posts",
+    "forbidden": ["people", "golden hour", "HDR", "warm ambient light on natural surfaces", "vehicles with lights unless parked"]
+  },
+  "prompts": [
+    {
+      "id": 1,
+      "category": "Alpine Cabin — Snow",
+      "prompt": "Cinematic aerial shot, small wooden alpine chalet on steep snow-covered mountainside, single amber window glowing warm, massive jagged peak behind disappearing into storm clouds, heavy snowfall, chimney smoke drifting left, dark frozen pine forest flanking both sides, stone path buried under snow leading to door, deep blue-grey atmosphere, no people, no golden hour, Arri Alexa 35mm anamorphic lens, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 2,
+      "category": "Alpine Cabin — Fog",
+      "prompt": "Cinematic ground-level shot, ancient stone alpine shelter perched on rocky ridge, one glowing amber window cutting through thick fog, snow-dusted boulders in foreground, dramatic Dolomite peaks partially obscured by mist, chimney smoke rising vertically into still cold air, no people, cold desaturated palette — ice blue, slate grey, deep charcoal — only window light warm, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 3,
+      "category": "Alpine Cabin — Blizzard",
+      "prompt": "Cinematic wide shot, traditional Swiss chalet buried to its eaves in deep snow, all windows glowing amber from within, heavy blizzard reducing visibility to 30 meters, dark spruce trees bending under snow weight on both sides, no road visible only footprints disappearing into white, chimney smoke torn sideways by wind, no people, extreme cold atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 4,
+      "category": "Alpine Cabin — Storm",
+      "prompt": "Cinematic elevated shot from above valley floor, tiny timber mountain refuge on exposed alpine ridge, single amber window glow, storm front moving in from left consuming half the frame in dark cloud, snow plateau below perfectly smooth and untouched, frozen lake reflecting storm light in distance, chimney smoke barely visible in gale, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 5,
+      "category": "Alpine Cabin — Night",
+      "prompt": "Cinematic close aerial, remote alpine hut on rocky snow-dusted ledge at deep blue hour, two amber windows glow intensely against near-dark sky, silhouette of jagged peak overhead, foreground of cracked granite boulders with snow pooled in crevices, no people, stars barely visible through thin cloud cover, chimney smoke threads upward, cold silence atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 6,
+      "category": "Alpine Cabin — Mist",
+      "prompt": "Cinematic wide ground shot, low wooden mountain cabin half-submerged in valley fog, only the amber-glowing roof windows and chimney visible above the white mist layer, dark treeline silhouette at fog edge, snow-capped peaks floating above clouds in blue-grey sky, no people, ethereal and isolated atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 7,
+      "category": "Alpine Cabin — Ice",
+      "prompt": "Cinematic aerial, small stone alpine cottage on frozen mountain lake shoreline, thick ice cracks radiating from shore into the dark reflective surface, amber windows cast warm pools onto the ice, surrounding peaks covered in snow and ice, light snowfall, no people, no vehicles, cold blue-black atmosphere, chimney smoke rising slow, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 8,
+      "category": "Alpine Cabin — Rain",
+      "prompt": "Cinematic wide shot, rustic alpine hut in autumn mountain rain, amber window glow reflects in puddles on the rocky path leading to the door, dark rain-soaked timber walls, heavy grey clouds pressing down on surrounding peaks, rain streaks visible against the darker treeline, chimney smoke immediately dissolved by rain, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 9,
+      "category": "Forest House — Snow",
+      "prompt": "Cinematic ground-level shot, small white clapboard house deep in dense pine forest, thick snow on roof and ground, single porch amber light casting warm circle on snow, dark towering pines framing the scene top and sides, chimney smoke rising straight up in still frozen air, no people, no movement, perfectly quiet winter atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 10,
+      "category": "Forest House — Rain",
+      "prompt": "Cinematic wide frontal shot, isolated white timber house in dark pine forest during heavy rain, amber porch light and window glow reflecting in large rain puddle in foreground, rain streaks cutting diagonally across dark tree trunks, chimney smoke curling in wet air, no people, deep dark forest behind house fading to black, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 11,
+      "category": "Forest House — Fog",
+      "prompt": "Cinematic frontal shot, small wooden cottage half-consumed by dense forest fog, amber windows barely visible through the white mist, dark pine trunks emerging from fog in foreground, fog erasing everything beyond 20 meters, chimney smoke blending into fog above, no people, eerie silent atmosphere, cold grey-green tones, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 12,
+      "category": "Forest House — Night",
+      "prompt": "Cinematic elevated shot, lone timber house in black pine forest at midnight, amber windows glow against total darkness of surrounding trees, no artificial light except structure, snow covering the ground between dark trunks, chimney smoke invisible against night sky, no people, extreme isolation and darkness, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 13,
+      "category": "Forest House — Mist",
+      "prompt": "Cinematic wide shot, dark red timber cabin in misty autumn pine forest, amber window glow warm against desaturated grey-green surroundings, morning ground mist threading between tree trunks, fallen pine needles on ground, chimney smoke and mist indistinguishable, no people, no snow — damp cold wet atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 14,
+      "category": "Forest House — Ice Storm",
+      "prompt": "Cinematic ground shot, small white house in pine forest during ice storm, every branch and surface coated in clear ice glinting faintly, amber windows warm against blue-white ice world, ice-laden trees bending under weight, sleet falling diagonally, chimney smoke horizontal in wind, no people, surreal ice landscape, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 15,
+      "category": "Coastal House — Fog",
+      "prompt": "Cinematic aerial shot, tall narrow white house perched on rocky coastal cliff, amber windows glowing through ocean fog, dark churning sea visible below cliff edge, fog rolling in from ocean erasing the horizon, dark fir trees clinging to cliff behind house, chimney smoke drifting seaward, no people, moody coastal atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 16,
+      "category": "Coastal House — Storm",
+      "prompt": "Cinematic wide shot, white Victorian house on cliff above storm-lashed coast, all windows amber glowing against dark sky, massive grey storm waves breaking on rocks below, rain and sea spray in the air, dark storm clouds pressing down, chimney smoke destroyed by wind, no people, dramatic stormy sea atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 17,
+      "category": "Coastal House — Rain",
+      "prompt": "Cinematic aerial, two-storey coastal house on a headland above dark sea, amber windows on every floor glowing in heavy coastal rain, rain-slicked road curving away from house along cliff edge, ocean barely visible through rain haze, chimney smoke immediately consumed by rain, no people, wet grey coastal night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 18,
+      "category": "Coastal House — Snow",
+      "prompt": "Cinematic wide shot, white clapboard lighthouse keeper's house on snow-covered coastal headland, amber light in upper window, dark frozen sea in background, icicles hanging from eaves, snow-dusted rocky shoreline, no people, cold blue-white palette broken only by amber window, blizzard conditions, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 19,
+      "category": "Coastal House — Mist",
+      "prompt": "Cinematic elevated shot, old stone coastal cottage on cliff edge wrapped in sea mist, amber windows warm and faint through the white fog, dark rocks and crashing waves below partially hidden by mist, a single lamp post nearby glowing amber, no people, melancholic ocean mist atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 20,
+      "category": "Lakeside Cabin — Snow",
+      "prompt": "Cinematic aerial, small dark timber lakeside cabin on peninsula of frozen lake, amber windows reflecting on black ice surface, snow-covered pine forest surrounding frozen lake, massive snow-capped mountain reflected in open water patch near shore, snowflakes drifting down, no people, perfect stillness, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 21,
+      "category": "Lakeside Cabin — Fog",
+      "prompt": "Cinematic wide shot, wooden fishing cabin at foggy lake edge at dawn, amber window glow reflects in still dark water, fog sits heavy on lake surface, dark pine treeline behind cabin disappearing into mist, dock half-visible extending into fog, no people, no wind, completely still, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 22,
+      "category": "Lakeside Cabin — Rain",
+      "prompt": "Cinematic ground shot, dark timber lake cabin in heavy rain, amber porch lantern glowing, rain pocking the surface of the dark lake in foreground, cabin reflection broken and shimmering in the rain-disturbed water, chimney smoke in wet air, no people, dark wet forest surroundings, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 23,
+      "category": "Lakeside Cabin — Mist",
+      "prompt": "Cinematic wide aerial, lone timber cabin on frozen lake shore, ground mist hugging the ice surface at ankle height, amber window warm and singular in the blue pre-dawn atmosphere, forest behind completely black, mountains pale silhouettes in background, no people, extraordinary stillness, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 24,
+      "category": "Lakeside Cabin — Ice",
+      "prompt": "Cinematic ground-level shot at ice surface, dark wooden boathouse on frozen mountain lake, amber light bleeding from cracks in old timber doors onto the cracked ice surface, ice crack patterns spreading across foreground, snow-dusted mountains reflected in smooth ice panels, no people, cold blue atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 25,
+      "category": "Riverside Cabin — Snow",
+      "prompt": "Cinematic aerial, tiny dark timber cabin on snow-covered bank of frozen mountain river, amber window and porch lamp warm against blue-grey environment, frozen river channels weaving across white foreground, dark pine forest lining opposite bank, mountains in far distance, no people, no vehicles, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 26,
+      "category": "Riverside Cabin — Fog",
+      "prompt": "Cinematic wide shot, stone cottage on fog-covered river bank, amber window glow barely penetrating river mist, dark water surface visible below the fog layer, old stone bridge partially consumed by fog in middle distance, willows heavy and dark on the opposite bank, no people, melancholic river mist, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 27,
+      "category": "Riverside Cabin — Rain",
+      "prompt": "Cinematic wide shot, old timber riverside shack in pouring rain, amber window throws light on rain-swollen dark river in foreground, rain rings spreading across entire river surface, dock planks slick and dark with rain, chimney smoke destroyed by heavy rain, no people, brooding rainy river atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 28,
+      "category": "Riverside Cabin — Mist",
+      "prompt": "Cinematic aerial, isolated log cabin at bend of mist-covered mountain river, amber window glowing in the blue pre-dawn mist, river silver and slow below, pine forest flanking both banks, mountains emerging from mist in upper frame, no people, no vehicles, perfect wilderness silence, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 29,
+      "category": "Bonfire Camp — Snow",
+      "prompt": "Cinematic ground-level wide shot, small campfire burning amber and gold at edge of snowy clearing, dark pine forest surrounding on three sides, tents or camp shelter barely visible in darkness behind fire, snow on ground reflecting faint firelight orange, no people, deep blue-black sky above, firelight is only warmth in frame, sparks drifting up, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 30,
+      "category": "Bonfire Camp — Rain",
+      "prompt": "Cinematic wide shot, campfire burning under natural rock overhang in heavy rain, amber and orange fire reflects on wet rock and puddles, dark forest visible through rain curtain beyond the shelter, rain streaming down over the overhang edge, camp gear barely visible in darkness, no people, warm fire vs cold rain contrast, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 31,
+      "category": "Bonfire Camp — Fog",
+      "prompt": "Cinematic wide shot, campfire glowing amber in thick mountain fog, fog lit from within by fire creating diffused orange halo, dark shapes of trees barely visible beyond fire, camp gear and low tent in background darkness, no people, fire the only anchor in white fog, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 32,
+      "category": "Bonfire Camp — Lakeside",
+      "prompt": "Cinematic wide shot, campfire on snow-dusted lakeside rocky shore, amber fire reflects long and warm on black still lake water, dark pine forest on opposite shore reflected in lake, mountains behind white and silent, camp setup in dark foreground, no people, fire and reflection only warm elements, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 33,
+      "category": "Bonfire Camp — Mountain",
+      "prompt": "Cinematic aerial, tiny campfire on high alpine ridge, enormous panorama of snow-covered mountains and dark valleys below, amber fire pinpoint of warmth in vast cold landscape, milky grey storm clouds moving in from left, camp barely visible in darkness around fire, no people, extreme scale — tiny fire against massive mountain world, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 34,
+      "category": "Bonfire Camp — River",
+      "prompt": "Cinematic wide shot, campfire on snow-covered gravel bar in middle of braided mountain river, dark rushing water on both sides reflecting fire amber, fire smoke drifting downstream, dark canyon walls rising on both sides, no people, completely isolated river island camp, cold blue and amber contrast, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 35,
+      "category": "Bonfire Camp — Blizzard",
+      "prompt": "Cinematic wide shot, campfire fighting to survive in blizzard, amber flame low and wind-battered, snow driving horizontally across frame, dark shapes of pine trees thrashing in wind beyond fire, camp tarp whipping, no people, survival atmosphere — fire barely alive in violent winter storm, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 36,
+      "category": "Bonfire Camp — Forest Night",
+      "prompt": "Cinematic close wide shot, campfire in dark pine forest clearing, amber firelight illuminating lower trunks of surrounding pines in warm orange, upper canopy completely black, sparks floating upward, camp gear arranged around fire, no people, dark intimate forest camp atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 37,
+      "category": "Jeep — Snow Mountain",
+      "prompt": "Cinematic ground-level frontal shot, dark Jeep Wrangler parked on rocky snow-covered mountain trail, headlights off and dark, engine off, vast snow mountain range behind vehicle, snowflakes drifting down, deep blue hour atmosphere, no driver, no people, vehicle completely still, mountains massive and cold, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 38,
+      "category": "Jeep — Frozen Lake",
+      "prompt": "Cinematic frontal ground shot, dark Land Rover Defender parked on frozen mountain lake, headlights off, cracked ice patterns radiating across foreground in intricate lines, massive snow peak perfectly reflected in polished ice panels between cracks, snowfall, no people, deep blue atmosphere, vehicle completely still, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 39,
+      "category": "Jeep — Coastal Cliff",
+      "prompt": "Cinematic wide aerial, dark green Land Rover parked on coastal clifftop, dark churning sea below and stretching to horizon, storm clouds pressing down from above, vehicle lights off, no people, vehicle at edge of land and sea, dramatic isolation, grey-green cold coastal atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 40,
+      "category": "Jeep — Mountain Ridge",
+      "prompt": "Cinematic extreme aerial looking straight down, dark Jeep on a narrow mountain ridge trail, dramatic drop on both sides into dark valley, snow covering the ridge, storm clouds below the ridge level, tiny vehicle on massive mountain, no people, vehicles completely still, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 41,
+      "category": "Jeep — Forest Rain",
+      "prompt": "Cinematic frontal wide shot, black 4x4 truck parked in dark pine forest clearing in heavy rain, rain hammering roof and hood, puddles forming around tyres, dark wet forest behind vehicle, rain streaks visible against slightly lighter sky between treetops, no people, no lights on vehicle, cold wet atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 42,
+      "category": "Jeep — Canyon",
+      "prompt": "Cinematic wide shot, dark Jeep parked at edge of snow-dusted canyon lookout, enormous canyon dropping away in foreground, river far below catching faint grey light, storm clouds filling upper frame, no people, no lights, vehicle at the edge of vast geological emptiness, cold blue atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 43,
+      "category": "Jeep — Glacier",
+      "prompt": "Cinematic aerial, dark 4x4 parked on rocky moraine above massive glacier, glacier ice blue and ancient filling the valley below, dark peaks rising on both sides, overcast grey sky, snowflakes drifting, no people, vehicle tiny against glacier scale, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 44,
+      "category": "Jeep — River Crossing",
+      "prompt": "Cinematic frontal shot, dark Land Rover parked on rocky riverbank of fast-flowing glacial river, river steel-grey and rushing fast in foreground, dark pine forest on opposite bank, snow-capped mountains behind, no people, no lights, vehicle parked and completely still, cold mist rising from river, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 45,
+      "category": "Vintage Truck — Snow",
+      "prompt": "Cinematic ground shot, black vintage 1960s pickup truck parked outside small snow-covered white house, snow piled on truck bed and roof, amber house windows glow, chimney smoke, no lights on truck, dark pine forest behind house, heavy snowfall, no people, nostalgic cold winter atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 46,
+      "category": "Vintage Truck — Rain",
+      "prompt": "Cinematic wide shot, dark green vintage pickup parked on dirt road in pouring forest rain, amber farmhouse windows visible behind vehicle, rain hitting metal roof and hood, puddles under truck, dark wet trees surrounding, no people, no truck lights, rain-soaked rural night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 47,
+      "category": "Vintage Truck — Fog",
+      "prompt": "Cinematic wide shot, old red 1950s pickup parked on mountain dirt road in thick fog, fog consuming the road 15 meters ahead of truck, amber farmhouse window glow visible faintly through fog behind vehicle, dark tree shapes in fog, no people, no lights on truck, cold foggy mountain morning, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 48,
+      "category": "Vintage Truck — Gas Station",
+      "prompt": "Cinematic wide shot, old black 1960s pickup parked at abandoned snow-covered rural gas station, single fluorescent canopy light casting cold white-yellow circle on snow and truck roof, empty highway disappearing into blizzard darkness behind, no people, no movement, snow accumulating on pump and truck, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 49,
+      "category": "Vintage Truck — Bridge",
+      "prompt": "Cinematic wide shot, vintage 1940s truck parked on old stone arch bridge over frozen river, single lamp post amber glow illuminating snow on bridge surface, glowing hilltop village visible across frozen river in background, massive snow mountain behind village, snowflakes drifting, no people, no truck lights, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 50,
+      "category": "Vintage Car — Coastal Road",
+      "prompt": "Cinematic wide aerial, dark red 1957 Chevrolet parked on narrow coastal cliff road, fog rolling in off dark ocean erasing horizon, tall white house on cliff ahead with amber windows, dark fir forest on cliff above, no people, no car lights, cold ocean fog atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 51,
+      "category": "Vintage Car — Mountain",
+      "prompt": "Cinematic aerial, dark vintage car parked on hairpin bend of mountain pass road, vast panorama of snow peaks and dark valleys below, overcast grey sky pressing down, no people, no car lights, car tiny on the massive switchback road, cold blue-grey mountain atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 52,
+      "category": "Vintage Car — Snowy Forest Track",
+      "prompt": "Cinematic wide shot, black 1960s sedan parked at end of snow-covered forest track, snow-laden pines pressing in on both sides, headlights off, small amber glowing cabin barely visible in darkness at track end, no people, tyre tracks in snow behind vehicle, cold quiet forest night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 53,
+      "category": "Train — Snow Valley",
+      "prompt": "Cinematic aerial directly above, long dark passenger train parked on straight track through vast snow-covered valley, amber coach windows glowing in sequence down the length of train, snow-capped mountains on both sides, red signal light on post at track edge, no people, complete stillness, train completely frozen and still, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 54,
+      "category": "Train — Mountain Tunnel",
+      "prompt": "Cinematic wide aerial, dark passenger locomotive at entrance to mountain tunnel, snow mountain rising above tunnel portal, amber coach windows glowing, snow-laden pines flanking the track, blizzard conditions, train completely still and parked, no people, steam drift from engine, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 55,
+      "category": "Train — Jungle Viaduct",
+      "prompt": "Cinematic wide aerial, dark steam locomotive on tall stone viaduct bridge over jungle canopy, amber coach windows glowing through low cloud, steam drifting left off locomotive, dense jungle below bridge pillars disappearing into fog, no people, train completely still, misty jungle mountain atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 56,
+      "category": "Train — Canyon Gorge",
+      "prompt": "Cinematic aerial looking down into narrow canyon, dark passenger train on track at canyon floor, twin waterfalls on both canyon walls, river alongside track, fog filling canyon from above, amber coach windows the only warm light in dark gorge, train completely still, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 57,
+      "category": "Train — Alpine Station",
+      "prompt": "Cinematic wide lateral shot, dark passenger train at small alpine mountain station, snow mountain backdrop, amber coach windows glowing, lamp post on platform casting amber halo through snowfall, station building with lit window, no people, train completely still at platform, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 58,
+      "category": "Train — Frozen River",
+      "prompt": "Cinematic wide aerial, long dark train on railway bridge over frozen river, amber coach windows reflected in smooth river ice below, snow-covered river banks on both sides, dark spruce forest lining the banks, overcast grey sky, train completely still and parked, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 59,
+      "category": "Train — Coastal Cliff",
+      "prompt": "Cinematic wide shot, dark vintage passenger train parked on coastal railway above dark storm sea, amber coach windows glowing, cliff dropping to churning waves below track, dark headland ahead in fog, rain streaking across frame, train completely still, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 60,
+      "category": "Train — Foggy Forest",
+      "prompt": "Cinematic ground shot, dark long passenger train at forest station in dense fog, amber coach windows glowing through fog in a warm receding line, dark pine trunks emerging from fog alongside track, fog erasing train beyond 5 cars, completely still, no people, eerie quiet forest fog, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 61,
+      "category": "Cruise Ship — Fjord",
+      "prompt": "Cinematic aerial, large dark cruise ship anchored in narrow Norwegian fjord, all cabin windows glowing amber in horizontal rows, massive glacier filling fjord end behind ship, dark rock walls rising on both sides, light snowfall, fjord water mirror-still reflecting ship lights, no people, ship completely still, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 62,
+      "category": "Cruise Ship — Storm",
+      "prompt": "Cinematic wide aerial, dark cruise ship anchored in storm bay, amber cabin windows glowing against dark storm sky, heavy rain and whitecaps visible on bay surface, dark headland in background consumed by storm cloud, ship completely still at anchor, no people, dramatic stormy harbour, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 63,
+      "category": "Cruise Ship — Arctic",
+      "prompt": "Cinematic wide shot, large dark cruise ship anchored between ice floes in arctic bay, amber windows glowing across all decks, massive white iceberg in background, grey sky pressing down, no people, ship completely still, ice floating around hull, cold blue-white arctic atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 64,
+      "category": "Mountain Hut — Deep Snow",
+      "prompt": "Cinematic wide shot, tiny stone shepherd's hut completely buried in deep alpine snow, only the chimney and single amber window visible above snowline, smooth white snow field surrounding, massive dark rock peak behind, no path visible, snowfall, no people, extreme isolation, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 65,
+      "category": "Mountain Hut — Ridge",
+      "prompt": "Cinematic extreme aerial looking down, tiny stone refuge hut on a sharp rocky ridge, enormous mountain panorama on all sides dropping away, one amber window glowing, dark Jeep parked beside hut, overcast sky with cloud layer below ridge, city lights faintly visible far below in valley, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 66,
+      "category": "Mountain Hut — Ice",
+      "prompt": "Cinematic wide shot, weathered wooden hut on edge of high glacier, blue glacier ice filling left half of frame, dark mountain rock on right, single amber window glow, crevasse patterns in glacier ice foreground, overcast sky, no people, extreme cold high altitude atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 67,
+      "category": "Mountain Hut — Mist",
+      "prompt": "Cinematic ground shot, small stone mountain hut surrounded by swirling cloud mist at high altitude, amber window just barely visible through white mist, rock and gravel ground with thin snow patches, mist closing in from all sides, no people, disorienting foggy high mountain atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 68,
+      "category": "Farmhouse — Snow",
+      "prompt": "Cinematic wide aerial, large old farmhouse in flat snowy rural landscape, amber windows across ground and upper floor, dark bare oak trees flanking the farmhouse, snow stretching to horizon in all directions, dirt track buried under snow, chimney smoke slow and vertical, no people, vast lonely winter farmland, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 69,
+      "category": "Farmhouse — Rain",
+      "prompt": "Cinematic wide shot, old stone farmhouse in heavy rain on a hillside, amber windows reflected in waterlogged field in foreground, chimney smoke in wet air, dark stone walls glistening, bare trees behind farmhouse, no people, melancholic rainy countryside, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 70,
+      "category": "Farmhouse — Fog",
+      "prompt": "Cinematic wide shot, old timber farmhouse on foggy rural hillside, amber windows barely visible through morning fog, dark barn shape beside house, fence line disappearing into fog in foreground, no people, quiet foggy countryside morning, cold blue-grey atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 71,
+      "category": "Flooded Valley — Overview",
+      "prompt": "Cinematic wide aerial, stone cottage on cliff edge above flooded valley city, amber lantern on cottage wall glowing, dark 4x4 parked beside cottage, entire valley below submerged in brown floodwater with amber street grid lights shimmering through, fog layer threading through valley mid-level, mountains rising dark on both sides, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 72,
+      "category": "Flooded Valley — Night",
+      "prompt": "Cinematic wide aerial, old Jeep parked on highland above flooded city at night, floodwater reflecting amber street lights in slow shimmer below, dark storm clouds above, fog drifting through valley, mountains flanking scene, no people, dramatic flood and city light atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 73,
+      "category": "Hillside Village — Snow",
+      "prompt": "Cinematic wide shot, medieval hilltop village completely snow-covered, hundreds of amber windows glowing across tiered stone buildings, massive snow mountain behind village, frozen lake in foreground, vintage truck on stone bridge crossing frozen river, lamp post amber on bridge, heavy snowfall, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 74,
+      "category": "Hillside Village — Fog",
+      "prompt": "Cinematic wide shot, small mountain village on steep hillside half-consumed by evening fog, amber windows scattered across the dark hillside visible through fog, dark pine forest above village disappearing into cloud, no people, no vehicles, quiet foggy mountain village, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 75,
+      "category": "Lighthouse — Storm",
+      "prompt": "Cinematic wide aerial, old lighthouse on rocky island in storm, beam sweeping — one window amber, massive storm waves breaking over lower rocks, dark storm sky, no people, rain and sea spray in air, completely isolated, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 76,
+      "category": "Lighthouse — Snow",
+      "prompt": "Cinematic wide shot, classic red and white striped lighthouse on snow-covered coastal headland, amber upper window glowing, dark frozen sea below, heavy blizzard, icicles hanging from railing, no people, cold blue-white winter seascape, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 77,
+      "category": "Lighthouse — Fog",
+      "prompt": "Cinematic wide shot, tall stone lighthouse rising from coastal fog, amber window visible at top, beam sweeping through fog, dark rocks and sea below fog layer, fog diffusing beam into wide glow, no people, classic lighthouse fog atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 78,
+      "category": "Lighthouse — Rain",
+      "prompt": "Cinematic elevated shot, white lighthouse on storm-lashed rocky point, all keeper's quarters windows amber glowing, rain-slicked rocks below, dark churning sea, rain streaks across frame, no people, wild coastal storm night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 79,
+      "category": "Cabin + Jeep — Snow River",
+      "prompt": "Cinematic aerial, dark Land Rover Defender parked beside small dark timber cabin on snow-covered bank of braided frozen mountain river, amber cabin window and porch lantern glow, frozen river channels weaving across white foreground, dark pine forest behind, mountains in distance, snowflakes drifting, no people, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 80,
+      "category": "Cabin + Jeep — Lakeside Snow",
+      "prompt": "Cinematic aerial, dark Jeep Wrangler and small dark cabin on islet of frozen mountain lake, amber cabin windows spill light onto ice surface, cracked ice in foreground, massive peak reflected in open water patch, snowfall, no people, both vehicle and cabin lights only practical warm sources, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 81,
+      "category": "Cabin + Truck — Forest Rain",
+      "prompt": "Cinematic frontal wide shot, white farmhouse in dark pine forest, red vintage truck parked at side, amber porch light and window glow, heavy rain, chimney smoke in wet air, no truck lights, no people, dark forest framing scene, rain puddle reflecting amber porch light, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 82,
+      "category": "Cabin + Train — Alpine Station Snow",
+      "prompt": "Cinematic wide shot, small alpine station building with amber windows, dark parked passenger train alongside platform, lamp post amber halo in snowfall, dark Jeep parked on station road, massive snow peak above, no people, both train coach windows and station windows glowing amber, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 83,
+      "category": "Cabin + Bonfire — Lakeside",
+      "prompt": "Cinematic wide shot, campfire burning on frozen lake shore with dark timber cabin behind it, cabin windows glowing amber, campfire casting orange glow on snow and ice, dark mountains reflected in open water beside shore, dark pine forest on both sides, no people, double warm light sources — fire and cabin windows, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 84,
+      "category": "Cabin + Bonfire — Mountain",
+      "prompt": "Cinematic wide shot, stone mountain shelter with amber window and outdoor fire pit burning beside it, fire casting amber light on snow-covered rocks, dark mountain valley below with distant town lights, heavy snowfall, no people, cold mountain night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 85,
+      "category": "Snowy Road — Night",
+      "prompt": "Cinematic aerial directly above snowy mountain serpentine road, dark car parked at hairpin bend, headlights off, road switchbacks receding into dark valley below, blizzard reducing visibility, snow-covered mountainside flanking road, no people, cold isolated road atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 86,
+      "category": "Snowy Road — Forest",
+      "prompt": "Cinematic wide shot, straight snow-covered road through dense dark pine forest, headlights of parked dark truck at road edge illuminating snow ahead, snow-heavy pines arching over road forming dark tunnel, no people, white road receding into darkness, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 87,
+      "category": "Frozen Waterfall — Night",
+      "prompt": "Cinematic wide shot, massive partially frozen waterfall on dark rock face, water still flowing through ice formations, moonlight cold on ice surfaces, deep blue-white atmosphere, small stone shelter at base of waterfall with single amber window, no people, no vehicles, extraordinary frozen natural scene, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 88,
+      "category": "Ice Road — Arctic",
+      "prompt": "Cinematic wide shot, dark 4x4 truck parked on arctic ice road stretching across frozen sea, headlights off, ice pressure ridges flanking the road, dark open water lead visible at road edge, overcast grey arctic sky, snowflakes drifting, no people, extreme cold isolation, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 89,
+      "category": "Abandoned Station — Snow",
+      "prompt": "Cinematic wide shot, abandoned rural railway station in heavy snow, old station building with a single amber interior window light still working, dark parked vintage truck outside, snow covering everything, tracks buried under snow, dark pine forest behind, no people, haunting abandoned atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 90,
+      "category": "Barn — Snow",
+      "prompt": "Cinematic wide shot, large dark wooden barn in flat snowfield, single amber light from barn interior bleeding through old timber boards, dark farmhouse behind with amber windows, bare oak tree beside barn, heavy snowfall, no people, quiet rural winter night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 91,
+      "category": "Village Road — Snow Night",
+      "prompt": "Cinematic ground shot, narrow cobblestone street in small European village under heavy snow, lamp posts amber glowing at intervals down the street, all house windows amber, snow covering rooftops and cobblestones, no people, no vehicles moving, quiet snowy village night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 92,
+      "category": "Village Road — Rain",
+      "prompt": "Cinematic wide shot, wet cobblestone lane through old stone village in rain, multiple amber windows reflecting in wet stones, lamp posts glowing amber down the lane, rain streaks in lamplight, no people, no vehicles, old European village rain night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 93,
+      "category": "Hilltop Monastery — Snow",
+      "prompt": "Cinematic aerial, ancient stone monastery complex on snow-covered hilltop, dozens of amber lit windows across stone buildings, massive snow mountain behind, valley below filled with low cloud, snowfall, no people, sacred and isolated winter atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 94,
+      "category": "Old Mill — River Fog",
+      "prompt": "Cinematic wide shot, old stone water mill on foggy river bank, amber window glowing, mill wheel frozen and still in winter, river fog rising from cold water surface, dark willow trees on opposite bank barely visible in fog, no people, no vehicles, old timeless river mill atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 95,
+      "category": "Tent Camp — Snow",
+      "prompt": "Cinematic wide shot, two expedition tents in high alpine snow field, amber light glowing from within each tent, dark mountain rock walls rising on both sides, heavy snowfall, camp stove visible as tiny orange glow outside tent, no people, high altitude winter camp atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 96,
+      "category": "Tent Camp — Forest Rain",
+      "prompt": "Cinematic wide shot, single camping tent under dark pine canopy in rain, amber lantern glow from inside tent, rain dripping from pine boughs, wet forest floor, small camp stove glowing orange barely visible outside tent door, no people, dark intimate forest camp, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 97,
+      "category": "Overwater Cabin — Fog",
+      "prompt": "Cinematic wide shot, dark timber cabin on stilts over fog-covered mountain lake, amber windows reflecting in black water between fog patches, massive mountain silhouette above fog line, no people, no boats, complete stillness, surreal foggy lake atmosphere, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 98,
+      "category": "Coastal Road + Car — Night Rain",
+      "prompt": "Cinematic aerial, dark vintage car parked on coastal road above storm sea, headlights off, heavy rain on ocean surface visible in distance, amber lighthouse beam sweeping through rain in background, cliff road wet and shining, no people, dramatic coastal night, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 99,
+      "category": "Mountain Pass — Blizzard",
+      "prompt": "Cinematic aerial, dark SUV parked at crest of snow mountain pass, vast blizzard panorama in all directions, snow-covered switchback road descending both sides of pass, total whiteout conditions reducing mountains to dark shapes, headlights off, no people, extreme mountain pass blizzard scale, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    },
+    {
+      "id": 100,
+      "category": "Cabin + Bonfire + Truck — Snow",
+      "prompt": "Cinematic wide shot, dark timber cabin with amber windows and glowing chimney, campfire burning in clearing in front of cabin, dark vintage truck parked to the side with no lights, snow covering everything, dark pine forest encircling the scene, sparks floating from fire, amber fire light and amber window light only warm sources, no people, perfect cozy dark winter scene, Arri Alexa 35mm anamorphic, Kodak Vision3 500T film grain, 9:16 vertical"
+    }
+  ]
+}
